@@ -21,14 +21,56 @@ corr <- function(directory, threshold = 0){
         setwd("C:/Users/ku906/Documents/Coursera_R")
         
         ## sourcing complete.R that is in the working directory
-        source("complete.R")
+        complete <- function(directory,id = 1:length(dir())){
+                ##-------------------------------------------------------------------------
+                
+                ## where directory is a character vector of length 1 indicating 
+                ## the location of the csv files
+                
+                ## where id is an integer vector indicating monitor ID numbers
+                ## to be provided by the use
+                
+                ##-------------------------------------------------------------------------
+                
+                ## setting working directory to the specified argument directory
+                setwd(directory)
+                
+                ## creating empty numeric vectors for id and number of complete obs (nobs)
+                ids <- numeric()
+                nobs <- numeric()
+                
+                ## Loop through files corresponding to input ids and calculate nobs for each
+                ## file and append it nobs and also append id to id
+                
+                for (k in seq_along(id)) {## converts id to string to be used in the path
+                        if (id[k] < 10) {
+                                fileid <- paste("00",toString(id[k]),".csv",sep="")
+                        }
+                        else if (id[k]>=10 && id[k] < 100 ){
+                                fileid <- paste("0",toString(id[k]),".csv",sep="")  
+                        }
+                        else {
+                                fileid <- paste(toString(id[k]),".csv",sep="")
+                        }
+                        path2file <- file.path(getwd(),fileid) ## gets the path to the file thats required to get data from
+                        
+                        ## read csv file
+                        
+                        x <- read.csv(path2file,header=T)
+                        completeObs <- nrow(x[complete.cases(x),])
+                        ids <- c(ids,id[k])
+                        nobs <- c(nobs,completeObs)
+                        
+                }
+                data.frame(ids,nobs)   ## Creating a data frame with ids and nobs
+        }
         
         ##------------------------------------------------------------------------
         ## Get data frame of file ids and complete observations
         ##------------------------------------------------------------------------
         
         
-        setwd(directory) ## Set working directory to the argument directory
+        ##etwd(directory) ## Set working directory to the argument directory
         
         
         List <- complete(directory,1:length(dir())) ## Call function complete.R to get data frame of ids and complete observations
