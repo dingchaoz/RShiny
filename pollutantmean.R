@@ -7,7 +7,7 @@
 
 ## Author : Srivathsan Seshadri, '2015-05-17'
 
-pollutantmean <- function(directory,pollutant,id){
+pollutantmean <- function(directory,pollutant="nitrate",id=1:10){
         
         ## ------------------------------------------------------------------
         ## where directory is a character vector of length 1
