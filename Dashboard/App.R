@@ -3,6 +3,7 @@ library(shiny)
 library(RODBC)
 library(RSQLServer)
 library(ggplot2)
+source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
 
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
@@ -29,6 +30,13 @@ ui <- fluidPage(
                 # make available choice of trucks 
                 selectInput(inputId = "Trucks",label = "Choose trucks here", choices = as.character(trucks$TruckName),multiple = T),
                 
+                # make software choice available
+                textInput(inputId = "FrmCal",label = "Software Version from"),
+                textInput(inputId = "ToCal",label = "to Software Version"),
+                
+                # make Date Range choice available
+                dateRangeInput(inputId = "DateRange",label = "Choose Date Range",start = "2012-01-01",end = "2017-01-01"),
+                
                 # action Button
                 actionButton(inputId = "Update", label = "Update"),
                 
@@ -40,7 +48,11 @@ ui <- fluidPage(
                 
                 
         ),
-        mainPanel( plotOutput("plot"))
+        mainPanel( plotOutput("Tplot"),
+                   plotOutput("Splot"),
+                   plotOutput("hist"),
+                   plotOutput("box")
+                   )
 )
 
 server <- function(input,output,session){
@@ -65,44 +77,92 @@ server <- function(input,output,session){
         })
         
         observeEvent(input$Update,{
+                #---------------------------------------------------GETTING INITAL VLAUES-----------------------------------------------------------------
                 SEID <- DiagList$SEID[which(DiagList$Name==input$Diag)]
-                #browser()
+                ExtID <- DiagList$ExtID[which(DiagList$Name==input$Diag)]
+                Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
+                startDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[1],"UTC"))
+                endDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[2],"UTC"))
+                
+                # had to re-write the below line from the observe block; uncertain about the scoping rules.
                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
                 TruckID <- trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)]
-                Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
+                #Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
                 #browser()
+                #------------------------------------------------------SETTING THR WHERE CLAUSE--------------------------------------------------------------------------------
+                # initializing a empty WhereClause vector
+                WhereClause = as.character()
+                
+                # Setting where clause for Parameter and Date - this the default where clause
+                if (is.na(ExtID)){
+                        tbl <- ".dbo.tblMinMaxData"
+                        # Calibration in below query may not be needed; thought it was needed for a very complicated reason. Thought in a nut shell - what if one PublicDataID could mean
+                        # different parameters in different builds? And what if we need the different parameters as capability parameter?
+                        PID <- sqlQuery(conn,paste("Select Distinct PublicDataID from",PrgMap$Database[which(PrgMap$Programs == input$Program)], ".dbo.tblDataInBuild where Data = ",paste0("'",Parameter,"'")))
+                        WhereClause <- paste("Where PublicDataId in ( ",paste(as.character(PID),collapse=","), ")","AND datenum between", startDate ,"AND", endDate)
+                       # browser()
+                }
+                else {
+                        tbl <- ".dbo.tblEventDrivenData"
+                        WhereClause <- paste("Where SEID = ", SEID, " AND ExtID = ", ExtID,"AND datenum between", startDate ,"AND", endDate)
+                }
+                
+                # Setting where clause for Truck group and Truck IDs
                 if (is.null(input$Program) | is.null(input$Diag)){
                         stop("Both program and Diagnostic must be chosen")
                 }
                 if (!is.null(input$TrucksGrp)& !is.null(input$Trucks)){
                         TruckID <- intersect(trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)],trucks$TruckID[which(trucks$TruckName %in% input$Trucks)])
-                        WhereClause <- paste("where",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","))
+                        WhereClause <- paste(WhereClause,"AND",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,".TruckID in (",paste(as.character(TruckID),collapse = ","),")")
+                       
                 }
                 else if(!is.null(input$TrucksGrp)){
                         TruckID <- trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)]
-                        WhereClause <- paste("where",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","))
+                        WhereClause <- paste(WhereClause,"AND",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,".TruckID in (",paste(as.character(TruckID),collapse = ","),")")
                 }
-                else{
+                else if(!is.null(input$Trucks)){
                         TruckID <- trucks$TruckID[which(trucks$TruckName %in% input$Trucks)]
-                        WhereClause <- paste("where",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","))
+                        WhereClause <- paste(WhereClause,"AND",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,".TruckID in (",paste(as.character(TruckID),collapse = ","),")")
                 }
+                
+#                 # Setting the where clause for Software
+#                 if(!is.null(input$FrmCal)){
+#                         WhereClause <- paste(WhereClause,"AND","CalibrationVersion > = ",input$FrmCal)
+#                 }
+#                 if(!is.null(input$ToCal)){
+#                         WhereClause <- paste(WhereClause,"AND","CalibrationVersion < =",input$ToCal)
+#                 }
+                
+                #Setting the where clause for Software
+                if((!identical(input$FrmCal,""))){
+                        WhereClause <- paste(WhereClause,"AND CalibrationVersion >=", input$FrmCal)
+                }
+                if((!identical(input$ToCal,""))){
+                        WhereClause <- paste(WhereClause,"AND CalibrationVersion <=", input$ToCal)
+                }
+                #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
                 Data <- 
                         
-                        sqlQuery(conn,paste("select DataValue,TruckName FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblEventDrivenData JOIN",
+                        sqlQuery(conn,paste("select DataValue,TruckName FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,"JOIN",
                                             PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks on",PrgMap$Database[[which(PrgMap$Programs==input$Program)]], 
-                                            ".dbo.tblEventDrivenData.TruckID = ", PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks.TruckID",
-                                            " Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID))
+                                            tbl,".TruckID = ", PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks.TruckID",
+                                            #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
+                                            WhereClause
+                                            ))
                 
-                 browser()
+                 #browser()
                  
                 if (nrow(Data) > 0 ){
                         
-                        output$plot <- renderPlot({
+                        output$Tplot <- renderPlot({
                                 
-                               # browser()
+                                browser()
                                 TgtDat <- Data
-                                qplot(TgtDat$DataValue,TgtDat$TruckName, main = "Data Vs Trucks",position = position_jitter(0.1,0.1),color = TgtDat$TruckName,xlab = Parameter) + theme_bw()
+                                # qplot(TgtDat$DataValue,TgtDat$TruckName, main = "Data Vs Trucks",position = position_jitter(0.1,0.1),color = TgtDat$TruckName,xlab = Parameter) + theme_bw()
+                                p <-ggplot(data = Data,aes(x=TruckName,y=DataValue,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()
+                                print(p)
+                                # geom_point(aes(color = TruckName))+
                         }) 
                         
                 }
