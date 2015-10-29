@@ -49,9 +49,10 @@ ui <- fluidPage(
                 
         ),
         mainPanel( plotOutput("Tplot"),
+                   
                    plotOutput("Splot"),
-                   plotOutput("hist"),
-                   plotOutput("box")
+                   plotOutput("box"),
+                   plotOutput("hist")
                    )
 )
 
@@ -81,6 +82,8 @@ server <- function(input,output,session){
                 SEID <- DiagList$SEID[which(DiagList$Name==input$Diag)]
                 ExtID <- DiagList$ExtID[which(DiagList$Name==input$Diag)]
                 Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
+                LSL <- DiagList$LSL[which(DiagList$Name==input$Diag)]
+                USL <- LSL <- DiagList$USL[which(DiagList$Name==input$Diag)]
                 startDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[1],"UTC"))
                 endDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[2],"UTC"))
                 
@@ -90,7 +93,7 @@ server <- function(input,output,session){
                 TruckID <- trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)]
                 #Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
                 #browser()
-                #------------------------------------------------------SETTING THR WHERE CLAUSE--------------------------------------------------------------------------------
+                #------------------------------------------------------SETTING THE WHERE CLAUSE--------------------------------------------------------------------------------
                 # initializing a empty WhereClause vector
                 WhereClause = as.character()
                 
@@ -100,12 +103,22 @@ server <- function(input,output,session){
                         # Calibration in below query may not be needed; thought it was needed for a very complicated reason. Thought in a nut shell - what if one PublicDataID could mean
                         # different parameters in different builds? And what if we need the different parameters as capability parameter?
                         PID <- sqlQuery(conn,paste("Select Distinct PublicDataID from",PrgMap$Database[which(PrgMap$Programs == input$Program)], ".dbo.tblDataInBuild where Data = ",paste0("'",Parameter,"'")))
-                        WhereClause <- paste("Where PublicDataId in ( ",paste(as.character(PID),collapse=","), ")","AND datenum between", startDate ,"AND", endDate)
+                        WhereClause <- paste("Where PublicDataId in ( ",paste(PID$PublicDataID,collapse=","), ")","AND datenum between", startDate ,"AND", endDate)
                        # browser()
+                        if (is.na(LSL)& is.na(USL)){
+                                stop(paste("Ask your friends in the data analysis team update the LSL & USL Parameters for", input$Diag, "& capability parameter", Parameter))
+                        }
+                        else if(is.na(LSL)){
+                                Value <- "DataMax"
+                        }
+                        else {
+                                Value <- "DataMin"
+                        }
                 }
                 else {
                         tbl <- ".dbo.tblEventDrivenData"
                         WhereClause <- paste("Where SEID = ", SEID, " AND ExtID = ", ExtID,"AND datenum between", startDate ,"AND", endDate)
+                        Value <- "DataValue"
                 }
                 
                 # Setting where clause for Truck group and Truck IDs
@@ -144,26 +157,31 @@ server <- function(input,output,session){
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
                 Data <- 
                         
-                        sqlQuery(conn,paste("select DataValue,TruckName FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,"JOIN",
+                        sqlQuery(conn,paste("select",Value,",TruckName, CalibrationVersion FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,"JOIN",
                                             PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks on",PrgMap$Database[[which(PrgMap$Programs==input$Program)]], 
                                             tbl,".TruckID = ", PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks.TruckID",
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                                             ))
                 
-                 #browser()
+                 browser()
                  
                 if (nrow(Data) > 0 ){
                         
                         output$Tplot <- renderPlot({
                                 
                                 browser()
-                                TgtDat <- Data
+                                # TgtDat <- Data
                                 # qplot(TgtDat$DataValue,TgtDat$TruckName, main = "Data Vs Trucks",position = position_jitter(0.1,0.1),color = TgtDat$TruckName,xlab = Parameter) + theme_bw()
-                                p <-ggplot(data = Data,aes(x=TruckName,y=DataValue,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()
+                                p <-ggplot(data = Data,aes(x=TruckName,y=eval(Value),color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()
                                 print(p)
                                 # geom_point(aes(color = TruckName))+
                         }) 
+                        
+                        output$hist <- renderPlot({
+                                q <- ggplot(Data,aes(x=eval(Value))) + geom_histogram(bandwidth = 0.5,colour="black", fill="white")+ theme_bw()
+                                print(q)
+                        })
                         
                 }
         })
