@@ -49,10 +49,10 @@ ui <- fluidPage(
                 
         ),
         mainPanel( plotOutput("Tplot"),
-                   
+                   plotOutput("hist"),
                    plotOutput("Splot"),
-                   plotOutput("box"),
-                   plotOutput("hist")
+                   plotOutput("box")
+                   
                    )
 )
 
@@ -65,7 +65,7 @@ server <- function(input,output,session){
         observe({
                 trk <- sqlQuery(conn, paste("select [TruckName] from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
-                 #browser()
+                 #
                 updateSelectInput(session,"TrucksGrp",label = "Choose Truck group of interest here",choices = 
                                           as.character(trucks$Family),selected = as.character(trucks$Family[1]))
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
@@ -92,7 +92,7 @@ server <- function(input,output,session){
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
                 TruckID <- trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)]
                 #Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
-                #browser()
+                #
                 #------------------------------------------------------SETTING THE WHERE CLAUSE--------------------------------------------------------------------------------
                 # initializing a empty WhereClause vector
                 WhereClause = as.character()
@@ -104,7 +104,7 @@ server <- function(input,output,session){
                         # different parameters in different builds? And what if we need the different parameters as capability parameter?
                         PID <- sqlQuery(conn,paste("Select Distinct PublicDataID from",PrgMap$Database[which(PrgMap$Programs == input$Program)], ".dbo.tblDataInBuild where Data = ",paste0("'",Parameter,"'")))
                         WhereClause <- paste("Where PublicDataId in ( ",paste(PID$PublicDataID,collapse=","), ")","AND datenum between", startDate ,"AND", endDate)
-                       # browser()
+                       # 
                         if (is.na(LSL)& is.na(USL)){
                                 stop(paste("Ask your friends in the data analysis team update the LSL & USL Parameters for", input$Diag, "& capability parameter", Parameter))
                         }
@@ -157,29 +157,29 @@ server <- function(input,output,session){
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
                 Data <- 
                         
-                        sqlQuery(conn,paste("select",Value,",TruckName, CalibrationVersion FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,"JOIN",
+                        sqlQuery(conn,paste("select",Value," as Val,TruckName, CalibrationVersion FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,"JOIN",
                                             PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks on",PrgMap$Database[[which(PrgMap$Programs==input$Program)]], 
                                             tbl,".TruckID = ", PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks.TruckID",
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                                             ))
                 
-                 browser()
+                 # 
                  
                 if (nrow(Data) > 0 ){
                         
                         output$Tplot <- renderPlot({
                                 
-                                browser()
-                                # TgtDat <- Data
-                                # qplot(TgtDat$DataValue,TgtDat$TruckName, main = "Data Vs Trucks",position = position_jitter(0.1,0.1),color = TgtDat$TruckName,xlab = Parameter) + theme_bw()
-                                p <-ggplot(data = Data,aes(x=TruckName,y=eval(Value),color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()
+                                
+                                TgtDat <- Data$TruckName
+                               
+                                p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()
                                 print(p)
-                                # geom_point(aes(color = TruckName))+
+                                
                         }) 
                         
                         output$hist <- renderPlot({
-                                q <- ggplot(Data,aes(x=eval(Value))) + geom_histogram(bandwidth = 0.5,colour="black", fill="white")+ theme_bw()
+                                q <- ggplot(Data,aes(x=Val)) + geom_histogram(bandwidth = 0.5,colour="black", fill="blue")+ theme_bw()
                                 print(q)
                         })
                         
