@@ -7,6 +7,7 @@ source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
 
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
+conn2 <- odbcConnect("IUPR")
 PrgMap <- list(Programs = c("Pick Up", "Chasis Cab"), Database = c("Seahawk", "DragonCC"))
 def_trk <- sqlQuery(conn, paste("select [TruckName] from",PrgMap$Database[[1]],".dbo. tblTrucks"))
 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblProcessingInfo"))
@@ -36,6 +37,9 @@ ui <- fluidPage(
                 
                 # make Date Range choice available
                 dateRangeInput(inputId = "DateRange",label = "Choose Date Range",start = "2012-01-01",end = "2017-01-01"),
+                
+                # make IUPR checkbox available
+                checkboxInput(inputId = "IUPRInf", label = "Show IUPR information"),
                 
                 # action Button
                 actionButton(inputId = "Update", label = "Update"),
