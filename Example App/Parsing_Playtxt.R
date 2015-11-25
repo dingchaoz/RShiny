@@ -18,3 +18,10 @@ variable<-toString(strsplit(test,split = "^\\s+"))
 
 x <- strsplit(variable,split = ",")
 # unlist(strsplit("a b c", split=" "))
+library(qdapRegex)
+string <- rm_white(header)
+
+for(i in length(strsplit(string," ")[[1]]):1){
+        print(i)
+}
+

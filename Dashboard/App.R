@@ -47,7 +47,7 @@ ui <- fluidPage(
                 
                 width = 5
                 
-                
+               
                 
                 
                 
@@ -67,6 +67,7 @@ server <- function(input,output,session){
                 
         })
         observe({
+              
                 trk <- sqlQuery(conn, paste("select [TruckName] from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
                  #
@@ -77,7 +78,7 @@ server <- function(input,output,session){
                 updateSelectInput(session,"Diag",label = "Choose Diagnostics of interest here",choices = 
                                           as.character(DiagList$Name))
                 updateSelectInput(session,"Trucks", label = "choose trucks here", choices = as.character(trucks$TruckName) )
-                
+               
                 
         })
         
@@ -100,7 +101,7 @@ server <- function(input,output,session){
                 #------------------------------------------------------SETTING THE WHERE CLAUSE--------------------------------------------------------------------------------
                 # initializing a empty WhereClause vector
                 WhereClause = as.character()
-                
+             
                 # Setting where clause for Parameter and Date - this the default where clause
                 if (is.na(ExtID)){
                         tbl <- ".dbo.tblMinMaxData"
@@ -158,6 +159,7 @@ server <- function(input,output,session){
                 if((!identical(input$ToCal,""))){
                         WhereClause <- paste(WhereClause,"AND CalibrationVersion <=", input$ToCal)
                 }
+                browser()
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
                 Data <- 
                         
@@ -177,7 +179,8 @@ server <- function(input,output,session){
                                 
                                 TgtDat <- Data$TruckName
                                
-                                p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()
+                                p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(Parameter)
+                                p <- p + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) 
                                 print(p)
                                 
                         }) 
