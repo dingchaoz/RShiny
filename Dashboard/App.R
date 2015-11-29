@@ -3,8 +3,9 @@ library(shiny)
 library(RODBC)
 library(RSQLServer)
 library(ggplot2)
+library(dplyr)
 source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
-
+source('~/Documents/Coursera_R/Dashboard/IUPRQuery.R')
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
 conn2 <- odbcConnect("IUPR")
@@ -144,20 +145,20 @@ server <- function(input,output,session){
                         WhereClause <- paste(WhereClause,"AND",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,".TruckID in (",paste(as.character(TruckID),collapse = ","),")")
                 }
                 
-#                 # Setting the where clause for Software
-#                 if(!is.null(input$FrmCal)){
-#                         WhereClause <- paste(WhereClause,"AND","CalibrationVersion > = ",input$FrmCal)
-#                 }
-#                 if(!is.null(input$ToCal)){
-#                         WhereClause <- paste(WhereClause,"AND","CalibrationVersion < =",input$ToCal)
-#                 }
-                
                 #Setting the where clause for Software
                 if((!identical(input$FrmCal,""))){
                         WhereClause <- paste(WhereClause,"AND CalibrationVersion >=", input$FrmCal)
                 }
                 if((!identical(input$ToCal,""))){
                         WhereClause <- paste(WhereClause,"AND CalibrationVersion <=", input$ToCal)
+                }
+                
+                # If IUPR Data is requested
+                if(input$IUPRInf == 1){
+                        IUPRTrks <- sqlQuery(conn,paste("Select TruckName FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks where TruckID in (",paste(as.character(TruckID),collapse = ","),")"))
+                        IUPRTrks <- as.character(IUPRTrks$TruckName)
+                        IUPRQry <- IUPRQuery(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,FrmSoftware = input$FrmCal,ToSoftware = input$ToCal,Trucks = IUPRTrks,DateRange = input$DateRange)
+                        IUPRData <- sqlQuery(conn2,query = IUPRQry)
                 }
                 browser()
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------

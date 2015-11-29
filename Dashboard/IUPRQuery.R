@@ -21,12 +21,13 @@ IUPRQuery <- function(Program,SEID,FrmSoftware = "", ToSoftware="",Trucks="",Dat
         if (is.null(SEID)| nchar(Program)< 1){
                 stop("Hello there!! how about letting me know the SEID & the Program?")
         }
-        setIDQry <- paste("SELECT SetID FROM qryLatestSEID")
+        setIDQry <- paste("SELECT SetID FROM",Program,".dbo.qryLatestSetID")
         # -------------------------WHERE CLAUSE --------------------------------------------------------------------
         if (nchar(Trucks)>0){
-                TruckID <- sqlQuery(connection,paste0("Select TruckID from ",Program," .dbo.tblTrucks where TruckName in ('",paste0(str_pad(Trucks,3,pad="'","both"),collapse = ","),"')"))
-                browser()
-                where <- paste0("WHERE TruckID in (",TruckID,collapse = ",",")")
+                sizes <- tapply(Trucks, seq(1:length(Trucks)), nchar)
+                TruckID <- sqlQuery(connection,paste0("Select TruckID from ",Program," .dbo.tblTrucks where TruckName in (",paste0(str_pad(Trucks,sizes+2,pad="'","both"),collapse = ","),")"))
+                # browser()
+                where <- paste0("WHERE TruckID in (",paste(as.character(as.vector(as.numeric(TruckID$Truck))),collapse = ","),")")
         }
         else {
                 where <- "Where"
@@ -41,17 +42,17 @@ IUPRQuery <- function(Program,SEID,FrmSoftware = "", ToSoftware="",Trucks="",Dat
                 where <- paste(where,"AND Calibration_version <=", ToSoftware )
         }
         if (nchar(DateRange[1])> 0 & nchar(DateRange[2])> 0){
-                where <- paste(where,"AND DateTime BETWEEN", DateRange[1], "AND", DateRange[2])
+                where <- paste(where,"AND DateTime BETWEEN", paste0("'",DateRange[1],"'"), "AND", paste0("'",DateRange[2],"'"))
         }
         else if(nchar(DateRange[1]) > 1){
-                where <- paste(where,"AND DateTime >=", DateRange[1])
+                where <- paste(where,"AND DateTime >=", paste0("'",DateRange[1],"'"))
         }
         else if(nchar(DateRange[2]) > 1) {
-                where <- paste(where,"AND DateTime <=", DateRange[2])
+                where <- paste(where,"AND DateTime <=", paste0("'",DateRange[2],"'"))
         }
         
         setIDQry <- paste(setIDQry,where)
         
-        Query <- paste("SELECT SEID ,TruckName, qrySystemErrorData.Calibration_Version,qrySystemErrorData.Calibration_Revision_Number , Numerator, Denominator, IUPR from qrySystemErrorData",
+        Query <- paste("SELECT SEID ,TruckName, qrySystemErrorData.Calibration_Version,qrySystemErrorData.Calibration_Revision_Number , Numerator, Denominator, IUPR from",Program,".dbo.qrySystemErrorData",
                        "INNER JOIN (",setIDQry,") as temptbl on qrySystemErrorData.SetID = temptbl.SetID where SEID =", SEID,"order by TruckName,Calibration_Version, Calibration_Revision_Number")
 }
