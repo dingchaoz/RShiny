@@ -46,19 +46,35 @@ ui <- fluidPage(
                 actionButton(inputId = "Update", label = "Update"),
                 
                 
-                width = 5
+                width = 3
                 
-               
+                
                 
                 
                 
         ),
-        mainPanel( plotOutput("Tplot"),
-                   plotOutput("hist"),
-                   plotOutput("Splot"),
-                   plotOutput("box")
-                   
-                   )
+        #         mainPanel( plotOutput("Tplot"),
+        #                    plotOutput("hist"),
+        #                    plotOutput("Splot"),
+        #                    plotOutput("box")
+        #                    
+        #                    )
+        mainPanel(
+                fluidRow(column(12,"",
+                                fluidRow(
+                                        column(8,
+                                               plotOutput("Tplot")),
+                                        column(width = 4,
+                                               plotOutput("hist")))), fluidRow(
+                                                       column(6,plotOutput("Splot")),
+                                                       column(width =6,plotOutput("IUPR"))
+                                               ), fluidRow(
+                                                       column(6,plotOutput("Dplot")),
+                                                       column(width =6, plotOutput("Nplot"))
+                                               )
+                         
+                )
+        )
 )
 
 server <- function(input,output,session){
@@ -68,10 +84,10 @@ server <- function(input,output,session){
                 
         })
         observe({
-              
+                
                 trk <- sqlQuery(conn, paste("select [TruckName] from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
-                 #
+                #
                 updateSelectInput(session,"TrucksGrp",label = "Choose Truck group of interest here",choices = 
                                           as.character(trucks$Family),selected = as.character(trucks$Family[1]))
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
@@ -79,7 +95,7 @@ server <- function(input,output,session){
                 updateSelectInput(session,"Diag",label = "Choose Diagnostics of interest here",choices = 
                                           as.character(DiagList$Name))
                 updateSelectInput(session,"Trucks", label = "choose trucks here", choices = as.character(trucks$TruckName) )
-               
+                
                 
         })
         
@@ -102,7 +118,7 @@ server <- function(input,output,session){
                 #------------------------------------------------------SETTING THE WHERE CLAUSE--------------------------------------------------------------------------------
                 # initializing a empty WhereClause vector
                 WhereClause = as.character()
-             
+                
                 # Setting where clause for Parameter and Date - this the default where clause
                 if (is.na(ExtID)){
                         tbl <- ".dbo.tblMinMaxData"
@@ -110,7 +126,7 @@ server <- function(input,output,session){
                         # different parameters in different builds? And what if we need the different parameters as capability parameter?
                         PID <- sqlQuery(conn,paste("Select Distinct PublicDataID from",PrgMap$Database[which(PrgMap$Programs == input$Program)], ".dbo.tblDataInBuild where Data = ",paste0("'",Parameter,"'")))
                         WhereClause <- paste("Where PublicDataId in ( ",paste(PID$PublicDataID,collapse=","), ")","AND datenum between", startDate ,"AND", endDate)
-                       # 
+                        # 
                         if (is.na(LSL)& is.na(USL)){
                                 stop(paste("Ask your friends in the data analysis team update the LSL & USL Parameters for", input$Diag, "& capability parameter", Parameter))
                         }
@@ -134,7 +150,7 @@ server <- function(input,output,session){
                 if (!is.null(input$TrucksGrp)& !is.null(input$Trucks)){
                         TruckID <- intersect(trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)],trucks$TruckID[which(trucks$TruckName %in% input$Trucks)])
                         WhereClause <- paste(WhereClause,"AND",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],tbl,".TruckID in (",paste(as.character(TruckID),collapse = ","),")")
-                       
+                        
                 }
                 else if(!is.null(input$TrucksGrp)){
                         TruckID <- trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)]
@@ -159,8 +175,10 @@ server <- function(input,output,session){
                         IUPRTrks <- as.character(IUPRTrks$TruckName)
                         IUPRQry <- IUPRQuery(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,FrmSoftware = input$FrmCal,ToSoftware = input$ToCal,Trucks = IUPRTrks,DateRange = input$DateRange)
                         IUPRData <- sqlQuery(conn2,query = IUPRQry)
+                        browser()
+                        IUPRSummary <- summarise(group_by(IUPRData,TruckName),IUPR = sum(Numerator)/sum(Denominator), Numerator = sum(Numerator,na.rm=T), Denominator = sum(Denominator,na.rm = T))
                 }
-                browser()
+                
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
                 Data <- 
                         
@@ -169,27 +187,59 @@ server <- function(input,output,session){
                                             tbl,".TruckID = ", PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks.TruckID",
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
-                                            ))
+                        ))
                 
-                 # 
-                 
+                # 
+                
                 if (nrow(Data) > 0 ){
                         
                         output$Tplot <- renderPlot({
                                 
                                 
                                 TgtDat <- Data$TruckName
-                               
+                                
+                                
                                 p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(Parameter)
                                 p <- p + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) 
                                 print(p)
                                 
                         }) 
                         
+                        output$Splot <- renderPlot({
+                                
+                                
+                                # TgtDat <- Data$TruckName
+                                
+                                r <-ggplot(data = Data,aes(x=as.factor(CalibrationVersion),y=Val,color = as.factor(CalibrationVersion)))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(Parameter)
+                                r <- r + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) 
+                                print(r)
+                                
+                        }) 
+                        
                         output$hist <- renderPlot({
-                                q <- ggplot(Data,aes(x=Val)) + geom_histogram(bandwidth = 0.5,colour="black", fill="blue")+ theme_bw()
+                                q <- ggplot(Data,aes(x=Val)) + geom_histogram(bandwidth = 0.5,colour="black", fill="blue")+ theme_bw()+ xlab(Parameter)
+                                q <- q + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
                                 print(q)
                         })
+                        if(input$IUPRInf == 1){
+                                output$IUPR <- renderPlot({
+                                        # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
+                                        r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T,geom = "bar",stat = "identity")+ theme_bw()+ coord_flip()+ theme(axis.title.y = element_blank())+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
+                                        print(r)
+                                })
+                                
+                                output$Dplot <- renderPlot({
+                                        # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
+                                        s <- qplot(data = IUPRSummary,x = TruckName, y = Denominator,na.rm = T,geom = "bar",stat = "identity")+ theme_bw()+ coord_flip()+ theme(axis.title.y = element_blank())#+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$Denominator,na.rm = T), max(IUPRSummary$Denominator,na.rm = T), by = 10),1))
+                                        print(s)
+                                })
+                                
+                                output$Nplot <- renderPlot({
+                                        # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
+                                        t <- qplot(data = IUPRSummary,x = TruckName, y = Numerator,na.rm = T,geom = "bar",stat = "identity")+ theme_bw()+ coord_flip()+ theme(axis.title.y = element_blank())#+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$Numerator,na.rm = T), max(IUPRSummary$Numerator,na.rm = T), by = 0.1),1))
+                                        print(t)
+                                })
+                        }
                         
                 }
         })
