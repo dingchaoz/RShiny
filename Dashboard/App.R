@@ -101,6 +101,7 @@ server <- function(input,output,session){
         
         observeEvent(input$Update,{
                 #---------------------------------------------------GETTING INITAL VLAUES-----------------------------------------------------------------
+                browser()
                 SEID <- DiagList$SEID[which(DiagList$Name==input$Diag)]
                 ExtID <- DiagList$ExtID[which(DiagList$Name==input$Diag)]
                 Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
@@ -175,8 +176,8 @@ server <- function(input,output,session){
                         IUPRTrks <- as.character(IUPRTrks$TruckName)
                         IUPRQry <- IUPRQuery(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,FrmSoftware = input$FrmCal,ToSoftware = input$ToCal,Trucks = IUPRTrks,DateRange = input$DateRange)
                         IUPRData <- sqlQuery(conn2,query = IUPRQry)
-                        browser()
-                        IUPRSummary <- summarise(group_by(IUPRData,TruckName),IUPR = sum(Numerator)/sum(Denominator), Numerator = sum(Numerator,na.rm=T), Denominator = sum(Denominator,na.rm = T))
+                       
+                        IUPRSummary <- summarise(group_by(IUPRData, TruckName),Numerator = sum(Numerator, na.rm = T), Denominator = sum(Denominator, na.rm = T), IUPR = Numerator/Denominator)
                 }
                 
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -240,6 +241,14 @@ server <- function(input,output,session){
                                         print(t)
                                 })
                         }
+                                else {
+                                        output$IUPR <- renderPlot({})
+                                        output$Dplot <- renderPlot({})
+                                        output$Nplot <- renderPlot({})
+                                        
+                                }
+                                        
+                        
                         
                 }
         })
