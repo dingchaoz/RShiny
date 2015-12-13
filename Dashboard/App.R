@@ -89,13 +89,13 @@ server <- function(input,output,session){
                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
                 #
                 updateSelectInput(session,"TrucksGrp",label = "Choose Truck group of interest here",choices = 
-                                          as.character(trucks$Family),selected = as.character(trucks$Family[1]))
-                browser()
-                # Checking if there are inputs to Truck Group; if so, make the choices of trucks limited to the grouping.
-                if (nchar(input$TrucksGrp)>0){
-                        sizes <- tapply(input$TrucksGrp, seq(1:length(input$TrucksGrp)), nchar)
-                trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks where Family in (",paste0(str_pad(input$TrucksGrp,sizes+2,pad="'","both"),collapse = ","),")"))
-                }
+                                          as.character(trucks$Family))
+               # browser()
+#                 # Checking if there are inputs to Truck Group; if so, make the choices of trucks limited to the grouping.
+#                 if (!is.null(input$TrucksGrp)){
+#                         sizes <- tapply(input$TrucksGrp, seq(1:length(input$TrucksGrp)), nchar)
+#                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks where Family in (",paste0(str_pad(input$TrucksGrp,sizes+2,pad="'","both"),collapse = ","),")"))
+#                 }
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
                 
                 updateSelectInput(session,"Diag",label = "Choose Diagnostics of interest here",choices = 
