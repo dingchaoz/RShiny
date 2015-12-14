@@ -4,8 +4,10 @@ library(RODBC)
 library(RSQLServer)
 library(ggplot2)
 library(dplyr)
+library(xlsx)
 source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
 source('~/Documents/Coursera_R/Dashboard/IUPRQuery.R')
+source('~/Documents/Coursera_R/Dashboard/PpK.R')
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
 conn2 <- odbcConnect("IUPR")
@@ -14,6 +16,7 @@ def_trk <- sqlQuery(conn, paste("select [TruckName] from",PrgMap$Database[[1]],"
 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblProcessingInfo"))
 SoftwareBuild <- sqlQuery(conn,paste("Select distinct calibration from",PrgMap$Database[[1]], " .dbo.tblDataInBuild"))
 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblTrucks"))
+PU_Cals <- read.xlsx("DragonPU_Cals.xlsx",1)
 
 
 ui <- fluidPage(
@@ -90,12 +93,12 @@ server <- function(input,output,session){
                 #
                 updateSelectInput(session,"TrucksGrp",label = "Choose Truck group of interest here",choices = 
                                           as.character(trucks$Family))
-               # browser()
-#                 # Checking if there are inputs to Truck Group; if so, make the choices of trucks limited to the grouping.
-#                 if (!is.null(input$TrucksGrp)){
-#                         sizes <- tapply(input$TrucksGrp, seq(1:length(input$TrucksGrp)), nchar)
-#                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks where Family in (",paste0(str_pad(input$TrucksGrp,sizes+2,pad="'","both"),collapse = ","),")"))
-#                 }
+                # browser()
+                #                 # Checking if there are inputs to Truck Group; if so, make the choices of trucks limited to the grouping.
+                #                 if (!is.null(input$TrucksGrp)){
+                #                         sizes <- tapply(input$TrucksGrp, seq(1:length(input$TrucksGrp)), nchar)
+                #                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks where Family in (",paste0(str_pad(input$TrucksGrp,sizes+2,pad="'","both"),collapse = ","),")"))
+                #                 }
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
                 
                 updateSelectInput(session,"Diag",label = "Choose Diagnostics of interest here",choices = 
@@ -112,7 +115,7 @@ server <- function(input,output,session){
                 ExtID <- DiagList$ExtID[which(DiagList$Name==input$Diag)]
                 Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
                 LSL <- DiagList$LSL[which(DiagList$Name==input$Diag)]
-                USL <- LSL <- DiagList$USL[which(DiagList$Name==input$Diag)]
+                USL <- DiagList$USL[which(DiagList$Name==input$Diag)]
                 startDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[1],"UTC"))
                 endDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[2],"UTC"))
                 
@@ -182,7 +185,7 @@ server <- function(input,output,session){
                         IUPRTrks <- as.character(IUPRTrks$TruckName)
                         IUPRQry <- IUPRQuery(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,FrmSoftware = input$FrmCal,ToSoftware = input$ToCal,Trucks = IUPRTrks,DateRange = input$DateRange)
                         IUPRData <- sqlQuery(conn2,query = IUPRQry)
-                       
+                        
                         IUPRSummary <- summarise(group_by(IUPRData, TruckName),Numerator = sum(Numerator, na.rm = T), Denominator = sum(Denominator, na.rm = T), IUPR = Numerator/Denominator)
                 }
                 
@@ -196,18 +199,35 @@ server <- function(input,output,session){
                                             WhereClause
                         ))
                 
-                # 
+                if(is.na(LSL)){
+                        
+                        LSL_Value <- NaN
+                }
+                else{
+                        LSL_Value <- PU_Cals$Value[which(PU_Cals$Parameter==as.character(LSL))]
+                }
+                if(is.na(USL)){
+                        
+                        USL_Value <- NaN
+                }
+                else{
+                        USL_Value <- PU_Cals$Value[which(PU_Cals$Parameter==as.character(USL))] 
+                }
+                
+                DescSats <- Ppk(Data$Val,LSL = LSL_Value,USL = USL_Value)
+                
                 
                 if (nrow(Data) > 0 ){
                         
                         output$Tplot <- renderPlot({
                                 
                                 
-                                TgtDat <- Data$TruckName
+                                # TgtDat <- Data$TruckName
+                               
                                 
-                                
-                                p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) + coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(Parameter)
-                                p <- p + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) 
+                                p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) +  coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(Parameter)
+                                p <- p + geom_hline(yintercept = c(LSL_Value, USL_Value),color = "Red", linetype = "longdash" ) + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) + expand_limits(y = LSL_Value) + scale_y_continuous(limits = c(min(c(Data$Val,LSL_Value - 0.5),na.rm = T),max(c(Data$Val,USL_Value),na.rm = T)))
+                                p <- p + geom_text(data = NULL,y = LSL_Value,x = 10, label = "LSL", color = "red")
                                 print(p)
                                 
                         }) 
@@ -247,13 +267,13 @@ server <- function(input,output,session){
                                         print(t)
                                 })
                         }
-                                else {
-                                        output$IUPR <- renderPlot({})
-                                        output$Dplot <- renderPlot({})
-                                        output$Nplot <- renderPlot({})
-                                        
-                                }
-                                        
+                        else {
+                                output$IUPR <- renderPlot({})
+                                output$Dplot <- renderPlot({})
+                                output$Nplot <- renderPlot({})
+                                
+                        }
+                        
                         
                         
                 }
