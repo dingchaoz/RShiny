@@ -18,5 +18,5 @@ Ppk <- function(data,LSL,USL){
                 ppkmax <- round((USL - mean(data,na.rm = T))/(3*sd(data,na.rm = T)),4)
         }
         
-        list(PpK = min(c(ppkmin,ppkmax),na.rm = T), Average = round(mean(data,na.rm = T),4), Stdev = round(sd(data,na.rm = T),4), Failures = sum(data >= USL | data <= LSL) )
+        list(PpK = min(c(ppkmin,ppkmax),na.rm = T), Average = round(mean(data,na.rm = T),4), Stdev = round(sd(data,na.rm = T),4), Failures = sum(data >= USL,na.rm = T) + sum(data <= LSL,na.rm = T) )
 }

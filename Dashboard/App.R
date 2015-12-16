@@ -16,7 +16,7 @@ def_trk <- sqlQuery(conn, paste("select [TruckName] from",PrgMap$Database[[1]],"
 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblProcessingInfo"))
 SoftwareBuild <- sqlQuery(conn,paste("Select distinct calibration from",PrgMap$Database[[1]], " .dbo.tblDataInBuild"))
 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblTrucks"))
-PU_Cals <- read.xlsx("DragonPU_Cals.xlsx",1)
+# PU_Cals <- read.xlsx("DragonPU_Cals.xlsx",1)
 
 
 ui <- fluidPage(
@@ -198,20 +198,22 @@ server <- function(input,output,session){
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                         ))
-                
+                 browser()
                 if(is.na(LSL)){
                         
                         LSL_Value <- NaN
                 }
                 else{
-                        LSL_Value <- PU_Cals$Value[which(PU_Cals$Parameter==as.character(LSL))]
+                        LSL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",LSL,"'"))
+                        LSL_Value <- LSL_Value$Value
                 }
                 if(is.na(USL)){
                         
                         USL_Value <- NaN
                 }
                 else{
-                        USL_Value <- PU_Cals$Value[which(PU_Cals$Parameter==as.character(USL))] 
+                        USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",LSL,"'"))
+                        USL_Value <- USL_Value$Value
                 }
                 
                 DescSats <- Ppk(Data$Val,LSL = LSL_Value,USL = USL_Value)
