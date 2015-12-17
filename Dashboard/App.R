@@ -62,26 +62,22 @@ ui <- dashboardPage(
                 
         ),
         dashboardBody(
-                tabItems(
-                        tabItem("dashboard",
-                                fluidRow(column(12,"",
-                                                fluidRow(
-                                                        column(8,
-                                                               box(plotOutput("Tplot"))),
-                                                        column(width = 4,
-                                                               box(plotOutput("hist"))))), fluidRow(
-                                                                       column(6,box(plotOutput("Splot"))),
-                                                                       column(width =6,plotOutput("IUPR"))
-                                                               ), fluidRow(
-                                                                       column(6,box(plotOutput("Dplot"))),
-                                                                       column(width =6, box(plotOutput("Nplot")))
-                                                               )
+                
+                        
+                                fluidRow(box(plotOutput("Tplot")),
                                          
-                                ))
-                )
+                                         box(plotOutput("hist"))),
+                                fluidRow(box(plotOutput("Splot")),
+                                         box(plotOutput("IUPR"))
+                                ),
+                                fluidRow(box(plotOutput("Dplot")),
+                                         box(plotOutput("Nplot")))
+                        
+                        
+                
         )
-        
 )
+
 
 server <- function(input,output,session){
         # USE eventReactive() at a later stage.
