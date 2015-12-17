@@ -61,7 +61,7 @@ ui <- dashboardPage(
                 
                 
         ),
-        dashboardBody(
+        dashboardBody(tabsetPanel(tabPanel("Plot",
                 
                         
                                 fluidRow(box(plotOutput("Tplot")),
@@ -72,8 +72,10 @@ ui <- dashboardPage(
                                 ),
                                 fluidRow(box(plotOutput("Dplot")),
                                          box(plotOutput("Nplot")))
+        ),
+        tabPanel("RYG Summary")
                         
-                        
+        )       
                 
         )
 )
@@ -109,7 +111,7 @@ server <- function(input,output,session){
         
         observeEvent(input$Update,{
                 #---------------------------------------------------GETTING INITAL VLAUES-----------------------------------------------------------------
-                
+               
                 SEID <- DiagList$SEID[which(DiagList$Name==input$Diag)]
                 ExtID <- DiagList$ExtID[which(DiagList$Name==input$Diag)]
                 Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
@@ -197,7 +199,7 @@ server <- function(input,output,session){
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                         ))
-                 # browser()
+                  # browser()
                 if(is.na(LSL)){
                         
                         LSL_Value <- NaN
@@ -211,7 +213,7 @@ server <- function(input,output,session){
                         USL_Value <- NaN
                 }
                 else{
-                        USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",LSL,"'"))
+                        USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",USL,"'"))
                         USL_Value <- USL_Value$Value
                 }
                 
@@ -227,11 +229,16 @@ server <- function(input,output,session){
                                
                                 
                                 p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) +  coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(paste(Parameter,"\n",paste("PpK =",DescSats$PpK,"Mean =", DescSats$Average, "Std.dev =",DescSats$Stdev, "Failures:",DescSats$Failures)))
-                                p <- p + geom_hline(yintercept = c(LSL_Value, USL_Value),color = "Red", linetype = "longdash" ) + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) + expand_limits(y = LSL_Value) + scale_y_continuous(limits = c(min(c(Data$Val,LSL_Value - 0.5),na.rm = T),max(c(Data$Val,USL_Value),na.rm = T)))
-                                p <- p + geom_text(data = NULL,y = LSL_Value,x = 10, label = "LSL", color = "red")
+                                p <- p + geom_hline(yintercept = c(LSL_Value, USL_Value),color = "Red", linetype = "longdash" ) + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) +  scale_y_continuous(limits = c(min(c(Data$Val,LSL_Value - 0.5),na.rm = T),max(c(Data$Val,USL_Value),na.rm = T)),breaks = scales::pretty_breaks(n = 10))
+                                if(!is.na(LSL_Value)){
+                                p <- p + geom_text(data = NULL,y = LSL_Value,x = 0.5, label = "LSL", color = "red")
+                                }
+                                if(!is.na(USL_Value)){
+                                        p <- p + geom_text(data = NULL,y = USL_Value,x = 0.5, label = "USL", color = "red")
+                                }
                                 print(p)
                                 
-                        }) 
+                        })
                         
                         output$Splot <- renderPlot({
                                 
@@ -252,7 +259,7 @@ server <- function(input,output,session){
                         if(input$IUPRInf == 1){
                                 output$IUPR <- renderPlot({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
-                                        r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T,geom = "bar",stat = "identity", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
+                                        r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T,geom = "bar",stat = "identity", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.4),1))
                                         print(r)
                                 })
                                 
