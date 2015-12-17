@@ -1,10 +1,10 @@
 # call libraries required
 library(shiny)
+library(shinydashboard)
 library(RODBC)
 library(RSQLServer)
 library(ggplot2)
 library(dplyr)
-library(xlsx)
 source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
 source('~/Documents/Coursera_R/Dashboard/IUPRQuery.R')
 source('~/Documents/Coursera_R/Dashboard/PpK.R')
@@ -19,8 +19,9 @@ trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblTr
 # PU_Cals <- read.xlsx("DragonPU_Cals.xlsx",1)
 
 
-ui <- fluidPage(
-        sidebarPanel(
+ui <- dashboardPage(
+        dashboardHeader(title = "Diagnostics Capability Data Analysis"),
+        dashboardSidebar(
                 # Select Product from drop down
                 
                 selectInput(inputId = "Program",label = "Choose the Program", choices = PrgMap$Programs,selected = PrgMap$Programs[[1]]),
@@ -49,35 +50,37 @@ ui <- fluidPage(
                 actionButton(inputId = "Update", label = "Update"),
                 
                 
-                width = 3
+                #width = 3,
                 
                 
+                sidebarMenu(
+                        menuItem("Dashboard", tabname = "dashboard"),
+                        menuItem("RYG", tabname = "RYG")
+                )    
                 
                 
                 
         ),
-        #         mainPanel( plotOutput("Tplot"),
-        #                    plotOutput("hist"),
-        #                    plotOutput("Splot"),
-        #                    plotOutput("box")
-        #                    
-        #                    )
-        mainPanel(
-                fluidRow(column(12,"",
-                                fluidRow(
-                                        column(8,
-                                               plotOutput("Tplot")),
-                                        column(width = 4,
-                                               plotOutput("hist")))), fluidRow(
-                                                       column(6,plotOutput("Splot")),
-                                                       column(width =6,plotOutput("IUPR"))
-                                               ), fluidRow(
-                                                       column(6,plotOutput("Dplot")),
-                                                       column(width =6, plotOutput("Nplot"))
-                                               )
-                         
+        dashboardBody(
+                tabItems(
+                        tabItem("dashboard",
+                                fluidRow(column(12,"",
+                                                fluidRow(
+                                                        column(8,
+                                                               box(plotOutput("Tplot"))),
+                                                        column(width = 4,
+                                                               box(plotOutput("hist"))))), fluidRow(
+                                                                       column(6,box(plotOutput("Splot"))),
+                                                                       column(width =6,plotOutput("IUPR"))
+                                                               ), fluidRow(
+                                                                       column(6,box(plotOutput("Dplot"))),
+                                                                       column(width =6, box(plotOutput("Nplot")))
+                                                               )
+                                         
+                                ))
                 )
         )
+        
 )
 
 server <- function(input,output,session){
@@ -198,7 +201,7 @@ server <- function(input,output,session){
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                         ))
-                 browser()
+                 # browser()
                 if(is.na(LSL)){
                         
                         LSL_Value <- NaN
