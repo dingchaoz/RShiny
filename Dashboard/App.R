@@ -22,6 +22,9 @@ trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblTr
 ui <- dashboardPage(
         dashboardHeader(title = "Diagnostics Capability Data Analysis"),
         dashboardSidebar(
+                
+                # set width
+                width = 300,
                 # Select Product from drop down
                 
                 selectInput(inputId = "Program",label = "Choose the Program", choices = PrgMap$Programs,selected = PrgMap$Programs[[1]]),
@@ -199,7 +202,7 @@ server <- function(input,output,session){
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                         ))
-                  # browser()
+                   # browser()
                 if(is.na(LSL)){
                         
                         LSL_Value <- NaN
