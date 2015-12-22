@@ -66,21 +66,23 @@ ui <- dashboardPage(
                 
         ),
         dashboardBody(tabsetPanel(tabPanel("Plot",
-                
-                        
-                                fluidRow(box(plotOutput("Tplot")),
-                                         
-                                         box(plotOutput("hist"))),
-                                fluidRow(box(plotOutput("Splot")),
-                                         box(plotOutput("IUPR"))
-                                ),
-                                fluidRow(box(plotOutput("Dplot")),
-                                         box(plotOutput("Nplot")))
+                                           
+                                           
+                                           fluidRow(box(plotOutput("Tplot")),
+                                                    
+                                                    box(plotOutput("hist"))),
+                                           fluidRow(box(plotOutput("Splot")),
+                                                    box(plotOutput("IUPR"))
+                                           ),
+                                           fluidRow(box(plotOutput("Dplot")),
+                                                    box(plotOutput("Nplot"))),
+                                           value = 1
         ),
-        tabPanel("RYG Summary")
-                        
+        tabPanel("RYG Summary", value =2),
+        id = "plots"
+        
         )       
-                
+        
         )
 )
 
@@ -115,7 +117,7 @@ server <- function(input,output,session){
         
         observeEvent(input$Update,{
                 #---------------------------------------------------GETTING INITAL VLAUES-----------------------------------------------------------------
-               
+                
                 SEID <- DiagList$SEID[which(DiagList$Name==input$Diag)]
                 ExtID <- DiagList$ExtID[which(DiagList$Name==input$Diag)]
                 Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
@@ -203,7 +205,7 @@ server <- function(input,output,session){
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                         ))
-                # browser()   
+                 browser()   
                 if(is.na(LSL)){
                         
                         LSL_Value <- NaN
@@ -213,8 +215,8 @@ server <- function(input,output,session){
                         if (!is.na(as.numeric(as.character(LSL)))){LSL_Value = as.numeric(as.character(LSL))} else{
                                 # check if the threshold is a table value
                                 if(stri_sub(as.character(LSL),-3,-1,3)=='(1)'){LSL <- stri_sub(as.character(LSL),1,nchar(as.character(LSL))-3)}
-                        LSL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",LSL,"'"))
-                        LSL_Value <- LSL_Value$Value}
+                                LSL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",LSL,"'"))
+                                LSL_Value <- LSL_Value$Value}
                 }
                 if(is.na(USL)){
                         
@@ -223,25 +225,25 @@ server <- function(input,output,session){
                 else{
                         if (!is.na(as.numeric(as.character(USL)))){USL_Value = as.numeric(as.character(USL))} else{
                                 if(stri_sub(as.character(USL),-3,-1,3)=='(1)'){USL <- stri_sub(as.character(USL),1,nchar(as.character(USL))-3)}
-                        USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",USL,"'"))
-                        USL_Value <- USL_Value$Value}
+                                USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",USL,"'"))
+                                USL_Value <- USL_Value$Value}
                 }
                 
                 DescSats <- Ppk(Data$Val,LSL = LSL_Value,USL = USL_Value)
                 
                 
                 if (nrow(Data) > 0 ){
-
+                        
                         output$Tplot <- renderPlot({
                                 
                                 
                                 # TgtDat <- Data$TruckName
-                               
-                               
+                                
+                                
                                 p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) +  coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(paste(Parameter,"\n",paste("PpK =",DescSats$PpK,"Mean =", DescSats$Average, "Std.dev =",DescSats$Stdev, "Failures:",DescSats$Failures)))
                                 p <- p + geom_hline(yintercept = c(LSL_Value,USL_Value),color = "Red", linetype = "longdash" ) + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) +  scale_y_continuous(limits = c(min(c(Data$Val,LSL_Value - 0.5,USL_Value-0.5),na.rm = T),max(c(Data$Val,USL_Value +0.5, LSL_Value + 0.5),na.rm = T)),breaks = scales::pretty_breaks(n = 10))
                                 if(!is.na(LSL_Value)){
-                                p <- p + geom_text(data = NULL,y = LSL_Value,x = 0.5, label = "LSL", color = "red")
+                                        p <- p + geom_text(data = NULL,y = LSL_Value,x = 0.5, label = "LSL", color = "red")
                                 }
                                 if(!is.na(USL_Value)){
                                         p <- p + geom_text(data = NULL,y = USL_Value,x = 0.5, label = "USL", color = "red")
