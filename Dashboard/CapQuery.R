@@ -1,7 +1,8 @@
 # This function returns a SQL query that is intended to be usedwithin Shiny R diagnostics data analysis dashboard
-# Usage : CapQuery(program,SEID, ExtID,FrmSoftware = "", ToSoftware="",Trucks="",truckGroup ="",DateRange=c("",""), CalRev="")
+# Usage : CapQuery(program,SEID, ExtID,Cap_Param = NULL ,FrmSoftware = "", ToSoftware="",Trucks="",truckGroup ="",DateRange=c("",""), CalRev="")
 # Where : program is a string that denotes the database name corresponding to the program
 #       : SEID & ExtID are numeric values that denote the System error ID & the Extension ID
+#       : Cap_Param is the capability parameter as a string. Its required when SQL query is needed for Min-Max diagnostic.
 #       : FrmSoftware & ToSoftware are numeric values that denote the software range of interest.
 #       : Trucks is a character vector of trucks
 #       : TruckGroup is a character vector of truck groups of interest
