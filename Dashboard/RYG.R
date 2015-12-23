@@ -4,33 +4,69 @@
 library(xlsx)
 library(RODBC)
 library(RSQLServer)
+source('~/Documents/Coursera_R/Dashboard/CapQuery.R')
+source('~/Documents/Coursera_R/Dashboard/PpK.R')
 connection <-odbcConnect("Capability")
 Diagnostics <- read.xlsx("FCA_RYG.xlsx",1)
+ppks <- as.numeric()
+FailedPts <- as.numeric()
+RYG <- as.character()
+RYG_Code <- as.numeric()
+
 # eval(parse(text = paste(length(Diagnostics$SEID),Diagnostics$Red[4])))
-for(i in 1:1){
-        browser()
+for(i in 1:2){
+        # browser()
        SQL_Query <- CapQuery(program='Seahawk',SEID=Diagnostics$SEID[i],ExtID = Diagnostics$ExtID[i],Cap_Param = Diagnostics$Parameter[i],truckGroup = 'Dragnet_PU_17')
-       if(is.na(LSL)){
+       if(is.na(Diagnostics$LSL)){
                
                LSL_Value <- NaN
        }
        else{
                # check if the LSL & USL are hard coded in the processing list
-               if (!is.na(as.numeric(as.character(LSL)))){LSL_Value = as.numeric(as.character(LSL))} else{
+               if (!is.na(as.numeric(as.character(Diagnostics$LSL)))){LSL_Value = as.numeric(as.character(Diagnostics$LSL))} else{
                        # check if the threshold is a table value
-                       if(stri_sub(as.character(LSL),-3,-1,3)=='(1)'){LSL <- stri_sub(as.character(LSL),1,nchar(as.character(LSL))-3)}
-                       LSL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",LSL,"'"))
+                       if(stri_sub(as.character(Diagnostics$LSL),-3,-1,3)=='(1)'){LSL <- stri_sub(as.character(Diagnostics$LSL),1,nchar(as.character(Diagnostics$LSL))-3)}
+                       LSL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",Diagnostics$LSL,"'"))
                        LSL_Value <- LSL_Value$Value}
        }
-       if(is.na(USL)){
+       if(is.na(Diagnostics$USL)){
                
                USL_Value <- NaN
        }
        else{
-               if (!is.na(as.numeric(as.character(USL)))){USL_Value = as.numeric(as.character(USL))} else{
-                       if(stri_sub(as.character(USL),-3,-1,3)=='(1)'){USL <- stri_sub(as.character(USL),1,nchar(as.character(USL))-3)}
-                       USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",USL,"'"))
+               if (!is.na(as.numeric(as.character(Diagnostics$USL)))){USL_Value = as.numeric(as.character(Diagnostics$USL))} else{
+                       if(stri_sub(as.character(Diagnostics$USL),-3,-1,3)=='(1)'){USL <- stri_sub(as.character(Diagnostics$USL),1,nchar(as.character(Diagnostics$USL))-3)}
+                       USL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",Diagnostics$USL,"'"))
                        USL_Value <- USL_Value$Value}
        }
+       
+       Data <- sqlQuery(connection,SQL_Query)
+       DescSats <- Ppk(Data$Val,LSL = LSL_Value,USL = USL_Value)
+       ppks[i] <- DescSats$PpK
+       FailedPts[i] <- DescSats$Failures
+       browser()
+       if(length(grep("C_",strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]]))> 0){
+               x <- grep("C_",strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]])
+               Threshold <- strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]][x]
+               Thd_val <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",Threshold,"'"))
+               eval(parse(text = paste(strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]][x],'<-',Thd_val)))
+               Flags <- eval(parse(text = paste("sum(Data$Val",Diagnostics$Red[i],")")))
+               if(Flags > 0){
+                       RYG [i] <- "Red"
+                       RYG_Code[i] <- 1
+               } else {
+                       RYG[i] <- "Green"
+                       RYG_Code[i] <- 2
+               }
+       } else if(length(grep("PpK",strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]]))> 0) {
+               if(ppks[i] >= 1.5){
+                       RYG [i] <- "Red"
+                       RYG_Code[i] <- 1
+               } else {
+                       RYG[i] <- "Green"
+                       RYG_Code[i] <- 2 
+               }
+       }
+       
        
 }
