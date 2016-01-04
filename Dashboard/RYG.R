@@ -14,7 +14,7 @@ RYG <- as.character()
 RYG_Code <- as.numeric()
 
 # eval(parse(text = paste(length(Diagnostics$SEID),Diagnostics$Red[4])))
-for(i in 1:2){
+for(i in 1:length(Diagnostics)){
         # browser()
        SQL_Query <- CapQuery(program='Seahawk',SEID=Diagnostics$SEID[i],ExtID = Diagnostics$ExtID[i],Cap_Param = Diagnostics$Parameter[i],truckGroup = 'Dragnet_PU_17')
        if(is.na(Diagnostics$LSL)){
@@ -44,8 +44,9 @@ for(i in 1:2){
        DescSats <- Ppk(Data$Val,LSL = LSL_Value,USL = USL_Value)
        ppks[i] <- DescSats$PpK
        FailedPts[i] <- DescSats$Failures
-       browser()
+       # browser()
        if(length(grep("C_",strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]]))> 0){
+               # Case in which Red criteria includes a Calibratable parameter
                x <- grep("C_",strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]])
                Threshold <- strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]][x]
                Thd_val <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",Threshold,"'"))
@@ -59,12 +60,24 @@ for(i in 1:2){
                        RYG_Code[i] <- 2
                }
        } else if(length(grep("PpK",strsplit(as.character(Diagnostics$Red[i]),split = " ")[[1]]))> 0) {
-               if(ppks[i] >= 1.5){
+               # case where Red criteria includes a PpK < 1.5 criteria
+               if(ppks[i] <= 1.5 | FailedPts[i] > 0){
                        RYG [i] <- "Red"
                        RYG_Code[i] <- 1
                } else {
                        RYG[i] <- "Green"
                        RYG_Code[i] <- 2 
+               }
+       } else {
+               # case where the Red criteria is any data over or less than a specific value.
+               
+               Flags <- eval(parse(text = paste("sum(Data$Val",Diagnostics$Red[i],")")))
+               if(Flags > 0){
+                       RYG [i] <- "Red"
+                       RYG_Code[i] <- 1
+               } else {
+                       RYG[i] <- "Green"
+                       RYG_Code[i] <- 2
                }
        }
        
