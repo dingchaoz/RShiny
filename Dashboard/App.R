@@ -9,6 +9,7 @@ library(stringi)
 source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
 source('~/Documents/Coursera_R/Dashboard/IUPRQuery.R')
 source('~/Documents/Coursera_R/Dashboard/PpK.R')
+source('~/Documents/Coursera_R/Dashboard/RYG_Grade.R')
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
 conn2 <- odbcConnect("IUPR")
@@ -58,8 +59,8 @@ ui <- dashboardPage(
                 
                 
                 sidebarMenu(
-                        menuItem("Dashboard", tabname = "dashboard"),
-                        menuItem("RYG", tabname = "RYG")
+                        menuItem("Dashboard", tabname = "dashboard")
+                        # menuItem("RYG", tabname = "RYG")
                 )    
                 
                 
