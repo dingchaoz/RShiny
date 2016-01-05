@@ -87,7 +87,7 @@ RYG_Grade <- function(program,FSoftware = "", TSoftware="",Trks=NULL,truckGrp =N
                 
                 
         }
-        browser()
+        # browser()
         Diagnostics$RYG <- RYG
         Diagnostics$Code <- RYG_Code
         return(Diagnostics)

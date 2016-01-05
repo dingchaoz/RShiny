@@ -79,7 +79,8 @@ ui <- dashboardPage(
                                                     box(plotOutput("Nplot"))),
                                            value = 1
         ),
-        tabPanel("RYG Summary", value =2),
+        tabPanel("RYG Summary", value =2,
+                 fluidPage(dataTableOutput("RYG"))),
         id = "plots"
         
         )       
@@ -131,8 +132,13 @@ server <- function(input,output,session){
                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
                 TruckID <- trucks$TruckID[which(trucks$Family %in% input$TrucksGrp)]
-                #Parameter <- DiagList$CriticalParam[which(DiagList$Name==input$Diag)]
-                #
+                # -----------------------------------ACT DEPENDING ON THE TAB THE USER IS IN---------------------------------------
+                if(input$plots == 2){
+                        # browser()
+                        RYG <- RYG_Grade(program = PrgMap$Database[which(PrgMap$Programs == input$Program)],FSoftware = input$FrmCal,TSoftware = input$ToCal,Trks = input$Trucks, truckGrp = input$TrucksGrp,DateRange = input$DateRange)
+                        output$RYG <- renderDataTable({RYG},options = list(scrollX = TRUE))
+                }
+                else {
                 #------------------------------------------------------SETTING THE WHERE CLAUSE--------------------------------------------------------------------------------
                 # initializing a empty WhereClause vector
                 WhereClause = as.character()
@@ -297,6 +303,7 @@ server <- function(input,output,session){
                         
                         
                         
+                }
                 }
         })
         
