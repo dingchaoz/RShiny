@@ -12,6 +12,7 @@ Ppk <- function(data,LSL,USL){
         ppkmax <- NaN
         
         if(!is.na(LSL)){
+                
                 ppkmin <- round((mean(data,na.rm = T)- LSL)/(3*sd(data,na.rm = T)),4)
         }
         if(!is.na(USL)){

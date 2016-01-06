@@ -30,7 +30,7 @@ RYG_Grade <- function(program,FSoftware = "", TSoftware="",Trks=NULL,truckGrp =N
                         if (!is.na(as.numeric(as.character(Diagnostics$LSL)))){LSL_Value = as.numeric(as.character(Diagnostics$LSL))} else{
                                 # check if the threshold is a table value
                                 if(stri_sub(as.character(Diagnostics$LSL),-3,-1,3)=='(1)'){LSL <- stri_sub(as.character(Diagnostics$LSL),1,nchar(as.character(Diagnostics$LSL))-3)}
-                                LSL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",Diagnostics$LSL,"'"))
+                                LSL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold LIKE '",Diagnostics$LSL,"%'"))
                                 LSL_Value <- LSL_Value$Value}
                 }
                 if(is.na(Diagnostics$USL)){
@@ -40,7 +40,7 @@ RYG_Grade <- function(program,FSoftware = "", TSoftware="",Trks=NULL,truckGrp =N
                 else{
                         if (!is.na(as.numeric(as.character(Diagnostics$USL)))){USL_Value = as.numeric(as.character(Diagnostics$USL))} else{
                                 if(stri_sub(as.character(Diagnostics$USL),-3,-1,3)=='(1)'){USL <- stri_sub(as.character(Diagnostics$USL),1,nchar(as.character(Diagnostics$USL))-3)}
-                                USL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold = '",Diagnostics$USL,"'"))
+                                USL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold LIKE '",Diagnostics$USL,"%'"))
                                 USL_Value <- USL_Value$Value}
                 }
                 
