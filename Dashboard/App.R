@@ -127,6 +127,7 @@ server <- function(input,output,session){
                 USL <- DiagList$USL[which(DiagList$Name==input$Diag)]
                 startDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[1],"UTC"))
                 endDate <- POSIXt2matlabUTC(as.POSIXlt(input$DateRange[2],"UTC"))
+                # browser()
                 
                 # had to re-write the below line from the observe block; uncertain about the scoping rules.
                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks"))
@@ -149,10 +150,13 @@ server <- function(input,output,session){
                         # Calibration in below query may not be needed; thought it was needed for a very complicated reason. Thought in a nut shell - what if one PublicDataID could mean
                         # different parameters in different builds? And what if we need the different parameters as capability parameter?
                         PID <- sqlQuery(conn,paste("Select Distinct PublicDataID from",PrgMap$Database[which(PrgMap$Programs == input$Program)], ".dbo.tblDataInBuild where Data = ",paste0("'",Parameter,"'")))
-                        WhereClause <- paste("Where PublicDataId in ( ",paste(PID$PublicDataID,collapse=","), ")","AND datenum between", startDate ,"AND", endDate)
+                        WhereClause <- paste("Where PublicDataId in ( ",paste(PID$PublicDataID,collapse=","), ")","AND datenum between", startDate ,"AND", endDate, "AND EMBFlag = 0")
                         # 
                         if (is.na(LSL)& is.na(USL)){
                                 stop(paste("Ask your friends in the data analysis team update the LSL & USL Parameters for", input$Diag, "& capability parameter", Parameter))
+                        }
+                        else if(!is.na(LSL)& !is.na(USL)){
+                                Value <- paste("DataMin , DataMax")
                         }
                         else if(is.na(LSL)){
                                 Value <- "DataMax"
@@ -163,7 +167,7 @@ server <- function(input,output,session){
                 }
                 else {
                         tbl <- ".dbo.tblEventDrivenData"
-                        WhereClause <- paste("Where SEID = ", SEID, " AND ExtID = ", ExtID,"AND datenum between", startDate ,"AND", endDate)
+                        WhereClause <- paste("Where SEID = ", SEID, " AND ExtID = ", ExtID,"AND datenum between", startDate ,"AND", endDate,"AND EMBFlag = 0")
                         Value <- "DataValue"
                 }
                 
@@ -212,7 +216,12 @@ server <- function(input,output,session){
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                         ))
-                  # browser()   
+                # browser()
+                if(Value == "DataMin , DataMax"){
+                        # browser()
+                        Data <-  melt(Data,id.vars = 3:4)
+                        names(Data)[names(Data)=="value"] <- "Val"
+                }   
                 if(is.na(LSL)){
                         
                         LSL_Value <- NaN

@@ -26,7 +26,7 @@ CapQuery <- function(program,SEID, ExtID,Cap_Param = NULL, FrmSoftware = "", ToS
                 stop("Both program and Diagnostic must be chosen")
         }
         truckstbl <- sqlQuery(connection,paste("Select TruckID, TruckName, Family from",program,".dbo.tblTrucks"))
-        if(is.nan(ExtID)){
+        if(is.nan(ExtID)| is.na(ExtID)){
                 if(!is.null(Cap_Param)){
                 ExtID_Where <- paste0("CriticalParam = '",Cap_Param,"'")
                 } else{stop("Need Critical Parameter for the argument Cap_Param for MinMax Diagnostic")}
@@ -45,10 +45,13 @@ CapQuery <- function(program,SEID, ExtID,Cap_Param = NULL, FrmSoftware = "", ToS
                 # Calibration in below query may not be needed; thought it was needed for a very complicated reason. Thought in a nut shell - what if one PublicDataID could mean
                 # different parameters in different builds? And what if we need the different parameters as capability parameter?
                 PID <- sqlQuery(connection,paste("Select Distinct PublicDataID from", program, ".dbo.tblDataInBuild where Data = ",paste0("'",Cap_Param,"'")))
-                WhereClause <- paste("Where PublicDataId in ( ",paste(PID$PublicDataID,collapse=","), ")","AND datenum between", startDate ,"AND", endDate)
+                WhereClause <- paste("Where PublicDataId in ( ",paste(PID$PublicDataID,collapse=","), ")","AND datenum between", startDate ,"AND", endDate,"AND EMBFlag = 0")
                 # 
                 if (is.na(Parameter$LSL)& is.na(Parameter$USL)){
                         stop(paste("Ask your friends in the data analysis team update the LSL & USL Parameters for SEID =", SEID , "& capability parameter", Parameter$CriticalParam))
+                }
+                else if(!is.na(Parameter$LSL)& !is.na(Parameter$USL)){
+                        Value <- paste("DataMin , DataMax")
                 }
                 else if(is.na(Parameter$LSL)){
                         Value <- "DataMax"
@@ -59,7 +62,7 @@ CapQuery <- function(program,SEID, ExtID,Cap_Param = NULL, FrmSoftware = "", ToS
         }
         else {
                 tbl <- ".dbo.tblEventDrivenData"
-                WhereClause <- paste("Where SEID = ", SEID, " AND ExtID = ", ExtID,"AND datenum between", startDate ,"AND", endDate)
+                WhereClause <- paste("Where SEID = ", SEID, " AND ExtID = ", ExtID,"AND datenum between", startDate ,"AND", endDate,"AND EMBFlag = 0")
                 Value <- "DataValue"
         }
         
