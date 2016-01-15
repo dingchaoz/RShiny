@@ -216,7 +216,7 @@ server <- function(input,output,session){
                                             #" Where ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblEventDrivenData",".TruckID in (",paste(as.character(TruckID),collapse = ","),") and SEID = ",SEID
                                             WhereClause
                         ))
-                # browser()
+                 # browser()
                 if(Value == "DataMin , DataMax"){
                         # browser()
                         Data <-  melt(Data,id.vars = 3:4)
@@ -231,8 +231,8 @@ server <- function(input,output,session){
                         if (!is.na(as.numeric(as.character(LSL)))){LSL_Value = as.numeric(as.character(LSL))} else{
                                 # check if the threshold is a table value
                                 if(stri_sub(as.character(LSL),-3,-1,3)=='(1)'){LSL <- stri_sub(as.character(LSL),1,nchar(as.character(LSL))-3)}
-                                LSL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold LIKE '",LSL,"%'"))
-                                LSL_Value <- LSL_Value$Value}
+                                LSL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default'and CalVersion = 32170017 and Threshold LIKE '",LSL,"%'"))
+                                LSL_Value <- LSL_Value$Value[1]}
                 }
                 if(is.na(USL)){
                         
@@ -241,7 +241,7 @@ server <- function(input,output,session){
                 else{
                         if (!is.na(as.numeric(as.character(USL)))){USL_Value = as.numeric(as.character(USL))} else{
                                 if(stri_sub(as.character(USL),-3,-1,3)=='(1)'){USL <- stri_sub(as.character(USL),1,nchar(as.character(USL))-3)}
-                                USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default' and Threshold LIKE '",USL,"%'"))
+                                USL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default'and CalVersion = 32170017 and Threshold LIKE '",USL,"%'"))
                                 USL_Value <- USL_Value$Value}
                 }
                 

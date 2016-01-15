@@ -6,6 +6,7 @@ RYG_Grade <- function(program,FSoftware = "", TSoftware="",Trks=NULL,truckGrp =N
         library(xlsx)
         library(RODBC)
         library(RSQLServer)
+        library(reshape2)
         source('~/Documents/Coursera_R/Dashboard/CapQuery.R')
         source('~/Documents/Coursera_R/Dashboard/PpK.R')
         connection <-odbcConnect("Capability")
@@ -30,7 +31,7 @@ RYG_Grade <- function(program,FSoftware = "", TSoftware="",Trks=NULL,truckGrp =N
                         if (!is.na(as.numeric(as.character(Diagnostics$LSL[i])))){LSL_Value = as.numeric(as.character(Diagnostics$LSL[i]))} else{
                                 # check if the threshold is a table value
                                 if(stri_sub(as.character(Diagnostics$LSL[i]),-3,-1,3)=='(1)'){LSL <- stri_sub(as.character(Diagnostics$LSL[i]),1,nchar(as.character(Diagnostics$LSL[i]))-3)}
-                                LSL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold LIKE '",Diagnostics$LSL[i],"%'"))
+                                LSL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and CalVersion = 32170017 and  Threshold LIKE '",Diagnostics$LSL[i],"%'"))
                                 LSL_Value <- LSL_Value$Value}
                 }
                 if(is.na(Diagnostics$USL[i])){
@@ -40,7 +41,7 @@ RYG_Grade <- function(program,FSoftware = "", TSoftware="",Trks=NULL,truckGrp =N
                 else{
                         if (!is.na(as.numeric(as.character(Diagnostics$USL[i])))){USL_Value = as.numeric(as.character(Diagnostics$USL[i]))} else{
                                 if(stri_sub(as.character(Diagnostics$USL[i]),-3,-1,3)=='(1)'){USL <- stri_sub(as.character(Diagnostics$USL[i]),1,nchar(as.character(Diagnostics$USL[i]))-3)}
-                                USL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default' and Threshold LIKE '",Diagnostics$USL[i],"%'"))
+                                USL_Value <- sqlQuery(connection,paste0("select Value from tblCals1 where Family = 'Default'and CalVersion = 32170017 and Threshold LIKE '",Diagnostics$USL[i],"%'"))
                                 USL_Value <- USL_Value$Value}
                 }
                 
