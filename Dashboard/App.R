@@ -197,7 +197,7 @@ server <- function(input,output,session){
                 # If IUPR Data is requested
                 if(input$IUPRInf == 1){
                         IUPRTrks <- sqlQuery(conn,paste("Select TruckName FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks where TruckID in (",paste(as.character(TruckID),collapse = ","),")"))
-                        IUPRTrks <- as.character(IUPRTrks$TruckName)
+                        try(IUPRTrks <- as.character(IUPRTrks$TruckName))
                         IUPRQry <- IUPRQuery(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,FrmSoftware = input$FrmCal,ToSoftware = input$ToCal,Trucks = IUPRTrks,DateRange = input$DateRange)
                         IUPRData <- sqlQuery(conn2,query = IUPRQry)
                         
