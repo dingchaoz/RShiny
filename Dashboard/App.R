@@ -112,10 +112,14 @@ server <- function(input,output,session){
                 
                 updateSelectInput(session,"Diag",label = "Choose Diagnostics of interest here",choices = 
                                           as.character(DiagList$Name))
-                updateSelectInput(session,"Trucks", label = "choose trucks here", choices = as.character(trucks$TruckName) )
+                
                 
                 
         })
+        
+        observe({
+                
+                updateSelectInput(session,"Trucks", label = "choose trucks here", choices = as.character(trucks$TruckName[which(trucks$Family==input$TrucksGrp)]))})
         
         observeEvent(input$Update,{
                 #---------------------------------------------------GETTING INITAL VLAUES-----------------------------------------------------------------
