@@ -217,14 +217,26 @@ shinyServer(function(input,output,session){
                                 
                                 
                                 observe({if(is.null(input$plot_dblclick)){ 
+										
                                         output$Nplot <-	renderPlot({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
                                         t <- qplot(data = IUPRSummary,x = TruckName, y = Numerator,na.rm = T,geom = "bar",stat = "identity", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())#+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$Numerator,na.rm = T), max(IUPRSummary$Numerator,na.rm = T), by = 0.1),1))
                                         t <- t + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
-                                        print(t)
+                                        t
                                 })
 								} else {
-										browser()
+										#browser()
+										lvls <- levels(IUPRSummary$TruckName)
+										Query <- NumDenomCounts(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,Trucks = lvls[round(input$plot_dblclick$y)])
+										RawData <- sqlQuery(conn2, Query)
+										increments <- Increments(RawData)
+										increments <- increments$data
+										isolate({output$Nplot <-	renderPlot({
+										t <- ggplot(increments,aes(DateTime,Increments,group=1,colours('Red')))+geom_line(color='red',)+ theme_bw()+geom_point(color='red')+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+										t
+												})})
+										
+										
 								}})
                         }
                         else {

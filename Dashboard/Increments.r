@@ -32,5 +32,5 @@ Increments <- function(Data) {
                 }
         }
         Data$Increments <- Diff
-        ggplot(Data,aes(DateTime,Increments,group=1))+ geom_line()
+        Data
 }
