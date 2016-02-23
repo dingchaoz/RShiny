@@ -54,7 +54,7 @@ shinyUI(dashboardPage(
                                            ),
                                            fluidRow(box(plotOutput("Dplot")),
                                                     box(plotOutput("Nplot",dblclick = dblclickOpts(
-														id = "plot_dblclick")))),
+														id = "plot_dblclick"),click = clickOpts("plot_click")))),
                                            value = 1
         ),
         tabPanel("RYG Summary", value =2,

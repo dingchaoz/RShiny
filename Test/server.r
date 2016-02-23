@@ -215,8 +215,13 @@ shinyServer(function(input,output,session){
                                          print(s)
                                 })
                                 
-                                
-                                observe({if(is.null(input$plot_dblclick)){ 
+                                click_saved <- reactiveValues(doubleclick = NULL)
+								click_saved2 <- reactiveValues(singleclick = NULL)
+								#browser()
+										observeEvent(eventExpr = input$plot_dblclick, handlerExpr ={ click_saved$doubleclick <- input$plot_dblclick})
+										observeEvent(eventExpr = input$plot_click, handlerExpr ={ click_saved2$singleclick <- input$plot_click})
+										
+                                observe({if(is.null(click_saved$doubleclick)|!is.null(click_saved2$singleclick)){ 
 										
                                         output$Nplot <-	renderPlot({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
@@ -225,9 +230,10 @@ shinyServer(function(input,output,session){
                                         t
                                 })
 								} else {
+										
 										#browser()
 										lvls <- levels(IUPRSummary$TruckName)
-										Query <- NumDenomCounts(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,Trucks = lvls[round(input$plot_dblclick$y)])
+										Query <- NumDenomCounts(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,Trucks = lvls[round(click_saved$doubleclick$y)])
 										RawData <- sqlQuery(conn2, Query)
 										increments <- Increments(RawData)
 										increments <- increments$data

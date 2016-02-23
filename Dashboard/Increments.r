@@ -12,7 +12,7 @@ Increments <- function(Data) {
                         Diff[i] <- Data$Numerator[1]
                 } 
                 else {
-                        if(i==194){browser()}
+                        
                         if((Data$TruckName[i]==Data$TruckName[i-1]) & (Data$Calibration_version[i]==Data$Calibration_version[i-1]))
                         {
                                 if(is.na(Data$Calibration_Revision_Number[i]==Data$Calibration_Revision_Number[i-1])|(Data$Calibration_Revision_Number[i]==Data$Calibration_Revision_Number[i-1]))
