@@ -12,11 +12,7 @@ shinyServer(function(input,output,session){
                 updateSelectInput(session,"TrucksGrp",label = "Choose Truck group of interest here",choices = 
                                           as.character(trucks$Family))
                  
-                #                 # Checking if there are inputs to Truck Group; if so, make the choices of trucks limited to the grouping.
-                #                 if (!is.null(input$TrucksGrp)){
-                #                         sizes <- tapply(input$TrucksGrp, seq(1:length(input$TrucksGrp)), nchar)
-                #                 trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblTrucks where Family in (",paste0(str_pad(input$TrucksGrp,sizes+2,pad="'","both"),collapse = ","),")"))
-                #                 }
+                
                 DiagList <- sqlQuery(conn, paste("select * from",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo. tblProcessingInfo"))
                 
                 updateSelectInput(session,"Diag",label = "Choose Diagnostics of interest here",choices = 
@@ -196,21 +192,61 @@ shinyServer(function(input,output,session){
                         }) 
                         
                         output$hist <- renderPlot({
-                                q <- ggplot(Data,aes(x=Val)) + geom_histogram(bandwidth = 0.5,colour="black", fill="blue")+ theme_bw()+ xlab(Parameter)
+                                q <- ggplot(Data,aes(x=Val)) + geom_histogram(colour="black", fill="blue")+ theme_bw()+ xlab(Parameter)
                                 q <- q + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
                                 print(q)
                         })
                         if(input$IUPRInf == 1){
-                                output$IUPR <- renderPlot({
+                                output$IUPR <- renderPlotly({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
-                                        r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T,geom = "bar",stat = "identity", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
-                                        r <- r + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
-                                        print(r)
+                                       # r <- ggplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T,geom = "bar", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
+										
+										r <- ggplot(data = IUPRSummary,aes(x = TruckName, y = IUPR,fill = TruckName))+ geom_bar(stat = "identity")+ theme_bw()+ coord_flip() +
+										 theme(legend.position = "none")+ theme(axis.title.y = element_blank())+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
+										
+					# browser()					
+                                         r <- r + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
+                                         #r <- ggplotly(r)
+										 # grph <- gg2list(r)
+ 										# return(list(
+ 												# list(
+ 													 # id = "IUPR",
+ 													 # data = grph$data,
+													 # layout = grph$layout
+													 												# )
+												# ))
+	# # 										grph
+# Just using plotly syntax
+											f1 <- list(
+														family = "Arial, sans-serif",
+														size = 12,
+														color = "black"
+														)
+											f2 <- list(
+														family = "Old Standard TT, serif",
+														size = 10,
+														color = "black"
+														)
+
+											a <- list(
+        
+													titlefont = f1,
+													showticklabels = TRUE,
+													tickangle = 0,
+													tickfont = f2
+       
+       
+													)
+										 r <- plot_ly(data=IUPRSummary,x = IUPR,y = TruckName,type = "bar",color = TruckName,orientation ='h')
+										layout(p = r, xaxis = a, yaxis = a, showlegend = FALSE, margin= list(l=200))
+										layout(xaxis = list(title = "IUPR"))
+										 
+										
                                 })
                                 
                                 output$Dplot <- renderPlot({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
-                                        s <- qplot(data = IUPRSummary,x = TruckName, y = Denominator,na.rm = T,geom = "bar",stat = "identity", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())#+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$Denominator,na.rm = T), max(IUPRSummary$Denominator,na.rm = T), by = 10),1))
+                                        s <- ggplot(data = IUPRSummary,aes(x = TruckName, y = Denominator,na.rm = T,fill = TruckName))+ geom_bar(stat="identity")+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())#+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$Denominator,na.rm = T), max(IUPRSummary$Denominator,na.rm = T), by = 10),1))
                                         s <- s + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
                                          print(s)
                                 })
@@ -225,7 +261,7 @@ shinyServer(function(input,output,session){
 										
                                         output$Nplot <-	renderPlot({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
-                                        t <- qplot(data = IUPRSummary,x = TruckName, y = Numerator,na.rm = T,geom = "bar",stat = "identity", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())#+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$Numerator,na.rm = T), max(IUPRSummary$Numerator,na.rm = T), by = 0.1),1))
+                                        t <- ggplot(data = IUPRSummary,aes(x = TruckName, y = Numerator,na.rm = T,fill = TruckName))+ geom_bar(stat="identity")+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())#+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$Numerator,na.rm = T), max(IUPRSummary$Numerator,na.rm = T), by = 0.1),1))
                                         t <- t + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
                                         t
                                 })

@@ -50,7 +50,7 @@ shinyUI(dashboardPage(
                                                     
                                                     box(plotOutput("hist"))),
                                            fluidRow(box(plotOutput("Splot")),
-                                                    box(plotOutput("IUPR"))
+                                                    box(plotlyOutput("IUPR"))
                                            ),
                                            fluidRow(box(plotOutput("Dplot")),
                                                     box(plotOutput("Nplot",dblclick = dblclickOpts(
