@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Basic_JS</title>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+</head>
+<body>
+    <h1 id="title" onclick="sayGoodbye();"> Hello </h1>
+    <h1 id="title2" onclick="$('#title2').html('Goodbye');">
+ 		Hello2
+ 	</h1>
+    <h1 id="title3" onclick="alert('hello');" >
+			Hello3
+	</h1>
+</body>
+
+
+<script type="text/javascript">
+    function sayGoodbye(){
+        console.log("goodbye");
+        $("#title").html("Goodbye");
+        $("#title").click(function () {
+            $("#title").html("Hello");
+            $("#title").off("click");
+        });
+
+    };
+</script>
+</html>

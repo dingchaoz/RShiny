@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Basic_JS</title>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+</head>
+<body>
+<div class="btn-group" role="group" aria-label="...">
+    <button type="button" class="btn btn-default" id="title4" onclick="showHideP1();">1st Plot</button>
+  <button type="button" class="btn btn-default" id="title5" onclick="showHideP2();">2nd Plot </button>
+</div>
+</body>
+
+
+<script type="text/javascript">
+
+
+//The data for our line
+var lineData = [ { "x": 1,   "y": 5},  { "x": 20,  "y": 20},
+                 { "x": 40,  "y": 10}, { "x": 60,  "y": 40},
+                 { "x": 80,  "y": 5},  { "x": 100, "y": 60}];
+
+//This is the accessor function
+var lineFunction = d3.svg.line()
+                         .x(function(d) { return d.x; })
+                         .y(function(d) { return d.y; })
+                         .interpolate("linear");
+var lineFunction2 = d3.svg.line()
+                         .x(function(d) { return d.y; })
+                         .y(function(d) { return d.x; })
+                         .interpolate("basis");
+
+//The SVG Container
+var svgContainer = d3.select("body").append("svg");
+
+//The line SVG Path we draw
+var lineGraph1 = svgContainer.append("path")
+                            .attr("id", "blueLine")
+                            .attr("d", lineFunction(lineData))
+                            .attr("stroke", "blue")
+                            .attr("stroke-width", 2)
+                            .attr("fill", "none");
+
+//The 2nd line SVG Path we draw
+var lineGraph2 = svgContainer.append("path")
+                            .attr("id", "redLine")
+                            .attr("d", lineFunction2(lineData))
+                            .attr("stroke", "red")
+                            .attr("stroke-width", 2)
+                            .attr("fill", "none");
+
+     function showHideP1(){
+    var active   = blueLine.active ? false : true ,
+		  newOpacity = active ? 0 : 1;
+		  console.log(active);
+        console.log("1st Plot");
+        d3.select("#blueLine").style("opacity", newOpacity);
+        blueLine.active = active;
+    };
+
+    function showHideP2(){
+    var active   = redLine.active ? false : true ,
+		  newOpacity = active ? 0 : 1;
+		  console.log(active);
+        console.log("2nd Plot");
+        d3.select("#redLine").style("opacity", newOpacity);
+        redLine.active = active;
+    };
+
+
+
+
+</script>
+</html>

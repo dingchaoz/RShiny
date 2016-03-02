@@ -161,22 +161,48 @@ shinyServer(function(input,output,session){
                 
                 
                 if (nrow(Data) > 0 ){
+				
+						f1 <- list(
+														family = "Arial, sans-serif",
+														size = 12,
+														color = "black"
+														)
+											f2 <- list(
+														family = "Old Standard TT, serif",
+														size = 10,
+														color = "black"
+														)
+
+											a <- list(
+        
+													titlefont = f1,
+													showticklabels = TRUE,
+													tickangle = 0,
+													tickfont = f2
+       
+       
+													)
                         
-                        output$Tplot <- renderPlot({
+                        output$Tplot <- renderPlotly({
                                 
                                 
                                 # TgtDat <- Data$TruckName
                                 
                                 
-                                p <-ggplot(data = Data,aes(x=TruckName,y=Val,color = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) +  coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(paste(Parameter,"\n",paste("PpK =",DescSats$PpK,"Mean =", DescSats$Average, "Std.dev =",DescSats$Stdev, "Failures:",DescSats$Failures)))
-                                p <- p + geom_hline(yintercept = c(LSL_Value,USL_Value),color = "Red", linetype = "longdash" ) + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) +  scale_y_continuous(limits = c(min(c(Data$Val,LSL_Value - 0.5,USL_Value-0.5),na.rm = T),max(c(Data$Val,USL_Value +0.5, LSL_Value + 0.5),na.rm = T)),breaks = scales::pretty_breaks(n = 10))
-                                if(!is.na(LSL_Value)){
-                                        p <- p + geom_text(data = NULL,y = LSL_Value,x = 0.5, label = "LSL", color = "red")
-                                }
-                                if(!is.na(USL_Value)){
-                                        p <- p + geom_text(data = NULL,y = USL_Value,x = 0.5, label = "USL", color = "red")
-                                }
-                                print(p)
+                                 # p <-ggplot(data = Data,aes(x=TruckName,y=Val,fill = TruckName))+geom_boxplot(outlier.colour = "white")+  geom_jitter(position = position_jitter(0.1,0)) +  coord_flip()+ theme_bw()+ theme(legend.position = "none") + theme(axis.title.y = element_blank())+ ylab(paste(Parameter,"\n",paste("PpK =",DescSats$PpK,"Mean =", DescSats$Average, "Std.dev =",DescSats$Stdev, "Failures:",DescSats$Failures)))
+                                 # p <- p + geom_hline(yintercept = c(LSL_Value,USL_Value),color = "Red", linetype = "dash" ) + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), ""))))) +  scale_y_continuous(limits = c(min(c(Data$Val,LSL_Value - 0.5,USL_Value-0.5),na.rm = T),max(c(Data$Val,USL_Value +0.5, LSL_Value + 0.5),na.rm = T)),breaks = scales::pretty_breaks(n = 10))
+                                 # if(!is.na(LSL_Value)){
+                                         # p <- p + geom_text(data = NULL,y = LSL_Value,x = 0.5, label = "LSL", color = "red")
+                                 # }
+                                 # if(!is.na(USL_Value)){
+                                         # p <- p + geom_text(data = NULL,y = USL_Value,x = 0.5, label = "USL", color = "red")
+                                 # }
+                                 # browser()
+                                 # ggplotly()
+								
+								 p <- plot_ly(data = Data,type = "box", boxpoints = "all", jitter = 0.1, x = Val, y = TruckName,color = TruckName,orientation ='h')
+								 layout(p = p, xaxis = a, yaxis = a, showlegend = FALSE, margin= list(l=200))
+										 layout(xaxis = list(title = paste(Parameter,"\n",paste("PpK =",DescSats$PpK,"Mean =", DescSats$Average, "Std.dev =",DescSats$Stdev, "Failures:",DescSats$Failures))))
                                 
                         })
                         
@@ -217,26 +243,7 @@ shinyServer(function(input,output,session){
 												# ))
 	# # 										grph
 # Just using plotly syntax
-											f1 <- list(
-														family = "Arial, sans-serif",
-														size = 12,
-														color = "black"
-														)
-											f2 <- list(
-														family = "Old Standard TT, serif",
-														size = 10,
-														color = "black"
-														)
-
-											a <- list(
-        
-													titlefont = f1,
-													showticklabels = TRUE,
-													tickangle = 0,
-													tickfont = f2
-       
-       
-													)
+											
 										 r <- plot_ly(data=IUPRSummary,x = IUPR,y = TruckName,type = "bar",color = TruckName,orientation ='h')
 										layout(p = r, xaxis = a, yaxis = a, showlegend = FALSE, margin= list(l=200))
 										layout(xaxis = list(title = "IUPR"))

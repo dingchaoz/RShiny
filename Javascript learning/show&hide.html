@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Button Show and Hide</title>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+</head>
+<body>
+<h1 id="title" onclick="alert('hello');">First Hello </h1>
+<div class="btn-group" role="group" aria-label="...">
+  <button type="button" class="btn btn-default" id="title2" onclick="showHide1();">1st Message</button>
+  <button type="button" class="btn btn-default" id="title3" onclick="showHide2();">2st Message </button>
+</div>
+</body>
+
+
+<script type="text/javascript">
+    function showHide1(){
+    var active   = title.active ? false : true ,
+		  newOpacity = active ? 0 : 1;
+		  console.log(active);
+        console.log("1st Hello");
+        d3.select("#title").style("opacity", newOpacity);
+        $("#title").html("First Hello").css("color","blue");
+        title.active = active;
+    };
+
+    function showHide2(){
+    var active   = title.active ? false : true ,
+		  newOpacity = active ? 0 : 1;
+		  console.log(active);
+        console.log("2nd Hello");
+        d3.select("#title").style("opacity", newOpacity);
+         $("#title").html("Second Hello").css("color","red");
+        title.active = active;
+    };
+</script>
+</html>
