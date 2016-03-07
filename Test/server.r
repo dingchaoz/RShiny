@@ -257,14 +257,14 @@ shinyServer(function(input,output,session){
                                         s <- s + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
                                          print(s)
                                 })
-                                
                                 click_saved <- reactiveValues(doubleclick = NULL)
 								click_saved2 <- reactiveValues(singleclick = NULL)
+								
 								#browser()
 										observeEvent(eventExpr = input$plot_dblclick, handlerExpr ={ click_saved$doubleclick <- input$plot_dblclick})
-										observeEvent(eventExpr = input$plot_click, handlerExpr ={ click_saved2$singleclick <- input$plot_click})
+										observeEvent(eventExpr = input$plot_click, handlerExpr ={ click_saved$doubleclick <- NULL})
 										
-                                observe({if(is.null(click_saved$doubleclick)|!is.null(click_saved2$singleclick)){ 
+                                observe({if(is.null(click_saved$doubleclick)){ 
 										
                                         output$Nplot <-	renderPlot({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
@@ -274,7 +274,7 @@ shinyServer(function(input,output,session){
                                 })
 								} else {
 										
-										#browser()
+										
 										lvls <- levels(IUPRSummary$TruckName)
 										Query <- NumDenomCounts(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,Trucks = lvls[round(click_saved$doubleclick$y)])
 										RawData <- sqlQuery(conn2, Query)
@@ -282,6 +282,7 @@ shinyServer(function(input,output,session){
 										increments <- increments$data
 										isolate({output$Nplot <-	renderPlot({
 										t <- ggplot(increments,aes(DateTime,Increments,group=1,colours('Red')))+geom_line(color='red',)+ theme_bw()+geom_point(color='red')+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+										
 										t
 												})})
 										
