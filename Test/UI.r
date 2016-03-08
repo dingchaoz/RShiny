@@ -46,7 +46,7 @@ shinyUI(dashboardPage(
         dashboardBody(tabsetPanel(tabPanel("Plot",
                                            
                                            
-                                           fluidRow(box(plotOutput("Tplot")),
+                                           fluidRow(box(plotlyOutput("Tplot")),
                                                     
                                                     box(plotOutput("hist"))),
                                            fluidRow(box(plotOutput("Splot")),
