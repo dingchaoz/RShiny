@@ -7,8 +7,8 @@ RYG_Grade <- function(program,FSoftware = "", TSoftware="",Trks=NULL,truckGrp =N
         library(RODBC)
         library(RSQLServer)
         library(reshape2)
-        source('~/Documents/Coursera_R/Dashboard/CapQuery.R')
-        source('~/Documents/Coursera_R/Dashboard/PpK.R')
+        source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/CapQuery.R')
+        source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/PpK.R')
         connection <-odbcConnect("Capability")
         if (toupper(program) == 'SEAHAWK'){
                 Diagnostics <- read.xlsx("FCA_RYG.xlsx",1)

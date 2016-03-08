@@ -6,10 +6,10 @@ library(RSQLServer)
 library(ggplot2)
 library(dplyr)
 library(stringi)
-source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
-source('~/Documents/Coursera_R/Dashboard/IUPRQuery.R')
-source('~/Documents/Coursera_R/Dashboard/PpK.R')
-source('~/Documents/Coursera_R/Dashboard/RYG_Grade.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/POSIXt2matlabUTC.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/IUPRQuery.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/PpK.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/RYG_Grade.R')
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
 conn2 <- odbcConnect("IUPR")
@@ -22,6 +22,7 @@ trucks <- sqlQuery(conn, paste("select * from",PrgMap$Database[[1]],".dbo. tblTr
 
 
 ui <- dashboardPage(
+                  
         dashboardHeader(title = "Diagnostics Capability Data Analysis"),
         dashboardSidebar(
                 
