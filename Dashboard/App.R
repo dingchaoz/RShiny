@@ -6,18 +6,13 @@ library(RSQLServer)
 library(ggplot2)
 library(dplyr)
 library(stringi)
-<<<<<<< HEAD
+library(shinyBS)
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/POSIXt2matlabUTC.R')
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/IUPRQuery.R')
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/PpK.R')
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/RYG_Grade.R')
-=======
 #runApp(port = 8080,host=getOption("shiny.host","143.222.211.24"))
-source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/POSIXt2matlabUTC.R')
-source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/IUPRQuery.R')
-source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/PpK.R')
-source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/RYG_Grade.R')
->>>>>>> 85c74a80bdbd0d2d35c3a5b916272f7f43e815bc
+
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
 conn2 <- odbcConnect("IUPR")
@@ -92,13 +87,18 @@ ui <- dashboardPage(
                  fluidPage(dataTableOutput("RYG"))),
         id = "plots"
         
-        )       
+        ),
+        bsTooltip(id = "someInput", title = "This is an input", 
+                  placement = "left", trigger = "hover")
         
         )
 )
 
 
 server <- function(input,output,session){
+  
+  addTooltip(session, id="someInput", title = "This is an input.",
+             placement = "left", trigger = "hover")
         # USE eventReactive() at a later stage.
         reactive({odbcCloseAll()
                 conn <-odbcConnect("Capability")
