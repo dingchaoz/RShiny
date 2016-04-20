@@ -23,6 +23,7 @@ IUPRQuery <- function(Program,SEID,FrmSoftware = "", ToSoftware="",Trucks="",Dat
         }
         setIDQry <- paste("SELECT SetID FROM",Program,".dbo.qryLatestSetID")
         # -------------------------WHERE CLAUSE --------------------------------------------------------------------
+        browser()
         if (nchar(Trucks)>0){
                 sizes <- tapply(Trucks, seq(1:length(Trucks)), nchar)
                 TruckID <- sqlQuery(connection,paste0("Select TruckID from ",Program," .dbo.tblTrucks where TruckName in (",paste0(str_pad(Trucks,sizes+2,pad="'","both"),collapse = ","),")"))

@@ -6,10 +6,18 @@ library(RSQLServer)
 library(ggplot2)
 library(dplyr)
 library(stringi)
+<<<<<<< HEAD
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/POSIXt2matlabUTC.R')
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/IUPRQuery.R')
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/PpK.R')
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/RYG_Grade.R')
+=======
+#runApp(port = 8080,host=getOption("shiny.host","143.222.211.24"))
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/POSIXt2matlabUTC.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/IUPRQuery.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/PpK.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/RYG_Grade.R')
+>>>>>>> 85c74a80bdbd0d2d35c3a5b916272f7f43e815bc
 # connect to the server need to be going to global.R at a later stage.
 conn <-odbcConnect("Capability")
 conn2 <- odbcConnect("IUPR")
@@ -208,7 +216,7 @@ server <- function(input,output,session){
                 if(input$IUPRInf == 1){
                         # browser()
                         IUPRTrks <- sqlQuery(conn,paste("Select TruckName FROM ",PrgMap$Database[[which(PrgMap$Programs==input$Program)]],".dbo.tblTrucks where TruckID in (",paste(as.character(TruckID),collapse = ","),")"))
-                        IUPRTrks <- as.character(IUPRTrks$TruckName)
+                        try(IUPRTrks <- as.character(IUPRTrks$TruckName))
                         IUPRQry <- IUPRQuery(Program = PrgMap$Database[[which(PrgMap$Programs==input$Program)]],SEID = SEID,FrmSoftware = input$FrmCal,ToSoftware = input$ToCal,Trucks = IUPRTrks,DateRange = input$DateRange)
                         IUPRData <- sqlQuery(conn2,query = IUPRQry)
                         
@@ -238,6 +246,7 @@ server <- function(input,output,session){
                         # check if the LSL & USL are hard coded in the processing list
                         if (!is.na(as.numeric(as.character(LSL)))){LSL_Value = as.numeric(as.character(LSL))} else{
                                 # check if the threshold is a table value
+              
                                 if(stri_sub(as.character(LSL),-3,-1,3)=='(1)'){LSL <- stri_sub(as.character(LSL),1,nchar(as.character(LSL))-3)}
                                 LSL_Value <- sqlQuery(conn,paste0("select Value from tblCals1 where Family = 'Default'and CalVersion = 32170017 and Threshold LIKE '",LSL,"%'"))
                                 LSL_Value <- LSL_Value$Value[1]}
@@ -288,11 +297,12 @@ server <- function(input,output,session){
                         }) 
                         
                         output$hist <- renderPlot({
-                                q <- ggplot(Data,aes(x=Val)) + geom_histogram(bandwidth = 0.5,colour="black", fill="blue")+ theme_bw()+ xlab(Parameter)
+                                q <- ggplot(Data,aes(x=Val)) + geom_histogram(binwidth = 0.5,colour="black", fill="blue")+ theme_bw()+ xlab(Parameter)
                                 q <- q + ggtitle(bquote(atop(.(input$Diag), atop(italic(.(input$Program)),atop(.(input$TrucksGrp), "")))))
                                 print(q)
                         })
                         if(input$IUPRInf == 1){
+                       
                                 output$IUPR <- renderPlot({
                                         # r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T) + geom_bar(aes(colors = IUPRSummary$TruckName))+ theme_bw()+ coord_flip()+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))
                                         r <- qplot(data = IUPRSummary,x = TruckName, y = IUPR,na.rm = T,geom = "bar",stat = "identity", fill = TruckName)+ theme_bw()+ coord_flip()+ theme(legend.position = "none")+ theme(axis.title.y = element_blank())+ scale_y_continuous(breaks = round(seq(min(IUPRSummary$IUPR,na.rm = T), max(IUPRSummary$IUPR,na.rm = T), by = 0.1),1))

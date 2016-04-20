@@ -4,8 +4,13 @@
 library(xlsx)
 library(RODBC)
 library(RSQLServer)
+<<<<<<< HEAD
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/CapQuery.R')
 source('C:/Users/ks692/Documents/Dingchao/Courses/R/Shiny/Dashboard/PpK.R')
+=======
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/CapQuery.R')
+source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/PpK.R')
+>>>>>>> 85c74a80bdbd0d2d35c3a5b916272f7f43e815bc
 connection <-odbcConnect("Capability")
 Diagnostics <- read.xlsx("FCA_RYG.xlsx",1)
 ppks <- as.numeric()

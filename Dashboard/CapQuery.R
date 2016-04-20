@@ -17,7 +17,7 @@ CapQuery <- function(program,SEID, ExtID,Cap_Param = NULL, FrmSoftware = "", ToS
         library(RODBC)
         library(RSQLServer)
         library(stringr)
-        source('~/Documents/Coursera_R/Dashboard/POSIXt2matlabUTC.R')
+        source('C:/Users/ks692/Documents/Dingchao/Courses/R/RShinyDash/Dashboard/POSIXt2matlabUTC.R')
         connection <-odbcConnect("Capability")
         startDate <- POSIXt2matlabUTC(as.POSIXlt(DateRange[1],"UTC"))
         endDate <- POSIXt2matlabUTC(as.POSIXlt(DateRange[2],"UTC"))

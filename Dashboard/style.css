@@ -1,0 +1,62 @@
+.slider-animate-container {
+  text-align: right;
+  margin-top: -9px;
+  color:red;
+  background:red;
+}
+.slider-animate-button {
+  opacity: 0.5;
+background:red;
+}
+.slider-animate-button .pause {
+  display: none;
+background:red;
+}
+.slider-animate-button.playing .pause {
+  display: inline;
+background:red;
+}
+.slider-animate-button .play {
+  display: inline;
+background:red;
+}
+.slider-animate-button.playing .play {
+  display: none;
+background:red;
+}
+
+.progress.shiny-file-input-progress {
+  visibility: hidden;
+background:red;
+}
+.progress.shiny-file-input-progress .progress-bar.bar-danger {
+  -webkit-transition: none;
+  -moz-transition: none;
+  -o-transition: none;
+  transition: none;
+background:red;
+}
+/* Make sure the filename doesn't extend past the bounds of the container */
+.shiny-input-container input[type=file] {
+  overflow: hidden;
+  max-width: 100%;
+background:red;
+}
+
+.shiny-progress-container {
+  position: fixed;
+  top: 50px;
+  width: 100%;
+  /* Make sure it draws above all Bootstrap components */
+  z-index: 2000;
+  background:black;
+}
+
+.shiny-progress .progress {
+  position: absolute;
+  width: 100%;
+  top: 0px;
+  height: 3px;
+  margin: 0px;
+background:red;
+}
